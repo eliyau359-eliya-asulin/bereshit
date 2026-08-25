@@ -65,9 +65,8 @@ a{color:inherit;text-decoration:none;}
 ul{list-style:none;margin:0;padding:0;}
 table{border-collapse:collapse;width:100%;}
 ::selection{background:var(--gold-soft);color:var(--green-deep);}
-::-webkit-scrollbar{width:10px;height:10px;}
-::-webkit-scrollbar-thumb{background:rgba(28,28,28,0.14);border-radius:8px;border:2.5px solid var(--ivory-deep);}
-::-webkit-scrollbar-track{background:transparent;}
+*{scrollbar-width:none;-ms-overflow-style:none;}
+*::-webkit-scrollbar{width:0;height:0;display:none;}
 
 @media (prefers-reduced-motion: reduce){
   *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
