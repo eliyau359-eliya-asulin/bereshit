@@ -78,6 +78,12 @@ PRODUCTS = [
      "material":"כסף מצופה מלוטש","dim":"גובה 32 ס״מ","stock":4,"threshold":4,"status":"active","sold":9},
 ]
 
+# No hosted product photography exists yet — every seed product starts
+# without an image and the admin/customer UIs fall back to a placeholder.
+# Set a real URL here (or via the admin's product editor) once available.
+for _p in PRODUCTS:
+    _p.setdefault("image", None)
+
 CATEGORIES = [
     {"id":"kiddush","label":"גביעי קידוש","status":"active","order":0},
     {"id":"candles","label":"פמוטים","status":"active","order":1},
@@ -120,6 +126,9 @@ STORE_INFO = {
     "address": "רחוב יפו 22, ירושלים",
     "currency": "ILS",
     "description": "בית מלאכה לכלי כסף וטקס — יודאיקה איכותית בעבודת יד.",
+    "shippingCost": 25,
+    "freeShippingThreshold": 500,
+    "paymentMethods": ["credit_card", "paypal"],
 }
 
 
@@ -171,3 +180,12 @@ def build_orders():
 
 
 ORDERS = build_orders()
+
+# Keep the denormalized customer.orders/spent fields honest — derive them
+# from the orders actually generated above rather than separately
+# hand-picked numbers that could silently drift out of sync with what a
+# real "customer order history" query would show.
+for _c in CUSTOMERS:
+    _c_orders = [o for o in ORDERS if o["customerId"] == _c["id"]]
+    _c["orders"] = len(_c_orders)
+    _c["spent"] = sum(o["total"] for o in _c_orders if o["status"] != "בוטל")

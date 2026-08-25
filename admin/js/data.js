@@ -16,7 +16,6 @@ const CAT_ICONS = {
   'מתנות': '<rect x="4" y="9" width="16" height="11" rx="1"/><path d="M4 9h16M12 9v11M12 9c-2-3-6-3-6 0s4 2 6 0Zm0 0c2-3 6-3 6 0s-4 2-6 0Z"/>',
   'כלי כסף': '<ellipse cx="12" cy="12" rx="8" ry="4.5"/><path d="M4 12v3c0 2.5 3.6 4.5 8 4.5s8-2 8-4.5v-3"/>',
 };
-const CAT_LIST = Object.keys(CAT_ICONS);
 function catIcon(cat){ return CAT_ICONS[cat] || CAT_ICONS['מתנות']; }
 
 /* ---------- Data arrays, populated by loadAdminData() before boot() renders ---------- */
@@ -42,29 +41,34 @@ async function loadAdminData(){
     sharedId: p.id,           // original id, for writing back through BereshitData
     name: p.name,
     cat: p.catLabel,
+    catKey: p.cat,
     price: p.price,
+    oldPrice: p.oldPrice,
+    badge: p.badge,
     stock: p.stock,
     threshold: p.threshold,
     sku: p.sku,
     status: p.status,
     sold: p.sold,
+    image: p.image || null,
   })));
 
-  CATEGORIES.push(...sharedCategories.map((c,i)=>({
-    id:'C-'+(i+1),
+  CATEGORIES.push(...sharedCategories.map(c=>({
     key: c.key,
     name: c.label,
-    count: PRODUCTS.filter(p=>p.cat===c.label).length,
+    count: PRODUCTS.filter(p=>p.catKey===c.key).length,
     status: c.status || 'active',
+    order: c.order,
   })));
 
   CUSTOMERS.push(...customers);
 
   ORDERS.push(...orders.map(o => ({
     id: o.id,
+    customerId: o.customerId,
     customer: o.customer,
     date: o.date,
-    items: o.items.map(it => ({ name: it.name, cat: it.cat, price: it.price, qty: it.qty })),
+    items: o.items.map(it => ({ productId: it.productId, name: it.name, cat: it.cat, price: it.price, qty: it.qty })),
     total: o.total,
     status: o.status,
     pay: o.pay,
@@ -77,13 +81,98 @@ async function loadAdminData(){
   Object.assign(STORE_INFO, storeInfo);
 }
 
-/* ---------- Sales chart series (mock, per period — not part of the shared model yet) ---------- */
-const SALES_SERIES = {
-  today: { total:4280, delta:'+6.2%', points:[120,180,90,260,310,220,410,380,520,460,610,540,720,690,470] },
-  '7d': { total:28650, delta:'+11.4%', points:[3200,4100,3800,5200,4600,3900,3850] },
-  '30d': { total:118400, delta:'+8.1%', points: [3400,3900,3100,4200,4600,3700,4100,3300,4800,5100,3900,4400,4700,3600,5200,4900,4100,3800,5300,5600,4200,4700,5100,4400,3900,5800,6100,5400,5900,6300] },
-  year: { total:1284300, delta:'+15.7%', points:[82000,74000,91000,88000,95000,102000,98000,110000,105000,120000,116000,103300] },
-};
+/* ---------- Real sales chart + KPI trends, computed from ORDERS ----------
+   No fabricated numbers: every total, bucket, and % delta below is derived
+   from the orders actually loaded from the API. Cancelled orders never
+   count toward revenue. A period with no orders yet honestly shows ₪0
+   rather than inventing activity. */
+const DAY_MS = 86400000;
 
-/* ---------- Admin user (mock) ---------- */
+function dateOnly(d){ const c = new Date(d); c.setHours(0,0,0,0); return c; }
+function parseOrderDate(s){ return new Date(s + 'T00:00:00'); }
+
+function revenueBetween(start, end){ // [start, end)
+  return ORDERS.reduce((sum,o)=>{
+    if(o.status==='בוטל') return sum;
+    const d = parseOrderDate(o.date);
+    return (d>=start && d<end) ? sum + o.total : sum;
+  }, 0);
+}
+function countBetween(start, end){
+  return ORDERS.reduce((n,o)=>{
+    if(o.status==='בוטל') return n;
+    const d = parseOrderDate(o.date);
+    return (d>=start && d<end) ? n+1 : n;
+  }, 0);
+}
+
+function formatDelta(current, previous){
+  if(previous > 0){
+    const pct = ((current-previous)/previous)*100;
+    return { text:(pct>=0?'+':'')+pct.toFixed(1)+'%', up: pct>=0 };
+  }
+  if(current > 0) return { text:'חדש', up:true };
+  return { text:'אין שינוי', up:true };
+}
+
+function computeSalesSeries(period){
+  const today = dateOnly(new Date());
+  let points, total, prevTotal;
+
+  if(period==='today'){
+    total = revenueBetween(today, new Date(today.getTime()+DAY_MS));
+    prevTotal = revenueBetween(new Date(today.getTime()-DAY_MS), today);
+    points = [total, total];
+  } else if(period==='7d' || period==='30d'){
+    const days = period==='7d' ? 7 : 30;
+    points = [];
+    for(let i=days-1;i>=0;i--){
+      const start = new Date(today.getTime()-i*DAY_MS);
+      points.push(revenueBetween(start, new Date(start.getTime()+DAY_MS)));
+    }
+    total = points.reduce((a,b)=>a+b,0);
+    const prevStart = new Date(today.getTime()-2*days*DAY_MS);
+    const prevEnd = new Date(today.getTime()-days*DAY_MS);
+    prevTotal = revenueBetween(prevStart, prevEnd);
+  } else { // 'year': last 12 calendar months
+    points = [];
+    for(let i=11;i>=0;i--){
+      const start = new Date(today.getFullYear(), today.getMonth()-i, 1);
+      const end = new Date(today.getFullYear(), today.getMonth()-i+1, 1);
+      points.push(revenueBetween(start, end));
+    }
+    total = points.reduce((a,b)=>a+b,0);
+    const prevStart = new Date(today.getFullYear()-1, today.getMonth()+1, 1);
+    const prevEnd = new Date(today.getFullYear(), today.getMonth()+1, 1);
+    prevTotal = revenueBetween(prevStart, prevEnd);
+  }
+
+  const delta = formatDelta(total, prevTotal);
+  return { total, points, delta: delta.text, up: delta.up };
+}
+
+/** 30-day-over-30-day revenue trend, used for the dashboard's "total sales" KPI. */
+function computeSalesTrend(){
+  const today = dateOnly(new Date());
+  const cur = revenueBetween(new Date(today.getTime()-30*DAY_MS), new Date(today.getTime()+DAY_MS));
+  const prev = revenueBetween(new Date(today.getTime()-60*DAY_MS), new Date(today.getTime()-30*DAY_MS));
+  return formatDelta(cur, prev);
+}
+/** 30-day-over-30-day order-count trend, used for the "orders" KPI. */
+function computeOrdersTrend(){
+  const today = dateOnly(new Date());
+  const cur = countBetween(new Date(today.getTime()-30*DAY_MS), new Date(today.getTime()+DAY_MS));
+  const prev = countBetween(new Date(today.getTime()-60*DAY_MS), new Date(today.getTime()-30*DAY_MS));
+  return formatDelta(cur, prev);
+}
+/** Real count of customers whose registration date falls in the current calendar month. */
+function computeNewCustomersThisMonth(){
+  const now = new Date();
+  return CUSTOMERS.filter(c=>{
+    const d = new Date(c.joined);
+    return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+  }).length;
+}
+
+/* ---------- Admin user (mock — no auth system exists yet) ---------- */
 const ADMIN_USER = { name:'ליאת אשכול', role:'מנהלת חנות', initials:'ל.א' };

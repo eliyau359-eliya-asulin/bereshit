@@ -78,9 +78,6 @@
         <b id="sidebarAdminName"></b>
         <span id="sidebarAdminRole"></span>
       </div>
-      <button class="logout-btn" id="sidebarLogout" title="התנתקות" aria-label="התנתקות">
-        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M13 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/></svg>
-      </button>
     </div>
   </aside>
 
@@ -103,26 +100,13 @@
           <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input type="text" id="globalSearch" placeholder="חיפוש מוצרים, הזמנות...">
         </div>
-        <button class="icon-btn" title="התראות" aria-label="התראות">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
-          <span class="dot"></span>
-        </button>
-        <div style="position:relative;">
-          <button class="topbar-profile" id="profileBtn">
-            <div class="admin-avatar" id="topbarAvatarInitials"></div>
-            <div>
-              <div class="topbar-profile-name" id="topbarAdminName"></div>
-              <div class="topbar-profile-role" id="topbarAdminRole"></div>
-            </div>
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div class="dropdown-menu" id="profileMenu">
-            <div class="dropdown-item" role="button" tabindex="0"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.4-4 5-6 8-6s6.6 2 8 6"/></svg>הפרופיל שלי</div>
-            <div class="dropdown-item" role="button" tabindex="0" data-nav-inline="settings"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12"/></svg>הגדרות</div>
-            <div class="dropdown-sep"></div>
-            <div class="dropdown-item danger" role="button" tabindex="0" id="logoutMenuItem"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5M20 12H9M13 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/></svg>התנתקות</div>
+        <button class="topbar-profile" id="profileBtn" data-nav-inline="settings" title="הגדרות">
+          <div class="admin-avatar" id="topbarAvatarInitials"></div>
+          <div>
+            <div class="topbar-profile-name" id="topbarAdminName"></div>
+            <div class="topbar-profile-role" id="topbarAdminRole"></div>
           </div>
-        </div>
+        </button>
       </div>
     </header>
 
@@ -157,7 +141,10 @@
           </div>
 
           <div class="panel">
-            <div class="panel-head"><div><h3>התראות מלאי</h3><div class="sub">מוצרים במלאי נמוך או אזל</div></div></div>
+            <div class="panel-head">
+              <div><h3>התראות מלאי</h3><div class="sub">מוצרים במלאי נמוך או אזל</div></div>
+              <button class="btn btn-ghost btn-sm" data-nav-inline="inventory">לניהול מלאי</button>
+            </div>
             <div class="panel-body" id="lowStockList"></div>
           </div>
         </div>
@@ -331,7 +318,7 @@
             <div class="content-card-body">
               <h4>תוכן דף הבית</h4>
               <p>עריכת הבאנר הראשי, כותרות וקטעי טקסט בדף הבית.</p>
-              <button class="btn btn-outline btn-sm" data-content-action>ניהול תוכן</button>
+              <span class="status-badge neutral">בקרוב</span>
             </div>
           </div>
           <div class="content-card">
@@ -339,7 +326,7 @@
             <div class="content-card-body">
               <h4>באנרים</h4>
               <p>ניהול באנרים פרסומיים המוצגים באתר החנות.</p>
-              <button class="btn btn-outline btn-sm" data-content-action>ניהול באנרים</button>
+              <span class="status-badge neutral">בקרוב</span>
             </div>
           </div>
           <div class="content-card">
@@ -347,7 +334,7 @@
             <div class="content-card-body">
               <h4>מוצרים מומלצים</h4>
               <p>בחירת מוצרים להצגה מודגשת בדף הבית ובקטגוריות.</p>
-              <button class="btn btn-outline btn-sm" data-content-action>ניהול מוצרים מומלצים</button>
+              <span class="status-badge neutral">בקרוב</span>
             </div>
           </div>
           <div class="content-card">
@@ -355,7 +342,7 @@
             <div class="content-card-body">
               <h4>אזורי מבצעים</h4>
               <p>ניהול אזורי מבצע מודגשים בעמודי החנות.</p>
-              <button class="btn btn-outline btn-sm" data-content-action>ניהול אזורי מבצע</button>
+              <span class="status-badge neutral">בקרוב</span>
             </div>
           </div>
           <div class="content-card">
@@ -363,7 +350,7 @@
             <div class="content-card-body">
               <h4>עמודי מידע</h4>
               <p>עריכת עמודי "אודות", "משלוחים" ו"שאלות נפוצות".</p>
-              <button class="btn btn-outline btn-sm" data-content-action>ניהול עמודים</button>
+              <span class="status-badge neutral">בקרוב</span>
             </div>
           </div>
         </div>
@@ -376,10 +363,8 @@
           <div class="settings-nav">
             <button class="active" data-tab="store"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M9 21v-6h6v6"/></svg>פרטי חנות</button>
             <button data-tab="users"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.4-4 5-6 8-6s6.6 2 8 6"/></svg>משתמשי ניהול</button>
-            <button data-tab="notifications"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>התראות</button>
             <button data-tab="shipping"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h13l4 4v4h-3"/><circle cx="7.5" cy="19" r="1.6"/><circle cx="16.5" cy="19" r="1.6"/><path d="M3 11V6h10v9"/></svg>משלוחים</button>
             <button data-tab="payment"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="1.5"/><path d="M3 10h18"/></svg>תשלומים</button>
-            <button data-tab="general"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l1.9-1.4-2-3.4-2.2.9a7.4 7.4 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.4 7.4 0 0 0-2.6 1.5l-2.2-.9-2 3.4L4.6 10.5a7.6 7.6 0 0 0 0 3l-1.9 1.4 2 3.4 2.2-.9c.75.66 1.63 1.17 2.6 1.5l.5 2.6h4l.5-2.6a7.4 7.4 0 0 0 2.6-1.5l2.2.9 2-3.4-1.9-1.4Z" stroke-linejoin="round"/></svg>כללי</button>
           </div>
 
           <div>
@@ -399,57 +384,36 @@
             </div>
 
             <div class="panel tab-panel" data-tab="users">
-              <div class="panel-head"><h3>משתמשי ניהול</h3><button class="btn btn-outline btn-sm">הוספת משתמש</button></div>
+              <div class="panel-head"><h3>משתמשי ניהול</h3></div>
+              <div class="panel-body" style="padding-bottom:0;"><p class="text-faint" style="font-size:12.5px;padding:0 0 16px;">רשימת מי שיש לו כרגע גישת ניהול. ניהול משתמשים מלא (הוספה/הרשאות) ידרוש מערכת התחברות, שטרם קיימת במערכת.</p></div>
               <div class="table-scroll"><table class="data-table">
                 <thead><tr><th>שם</th><th>אימייל</th><th>תפקיד</th><th>סטטוס</th></tr></thead>
                 <tbody>
                   <tr><td><div class="cell-main"><div class="avatar-sm">ל.א</div><span class="cell-title">ליאת אשכול</span></div></td><td class="text-faint">liat@bereshit-judaica.co.il</td><td class="text-faint">מנהלת חנות</td><td><span class="status-badge success">פעיל</span></td></tr>
-                  <tr><td><div class="cell-main"><div class="avatar-sm">ד.כ</div><span class="cell-title">דנה כרמי</span></div></td><td class="text-faint">dana@bereshit-judaica.co.il</td><td class="text-faint">ניהול תוכן</td><td><span class="status-badge success">פעיל</span></td></tr>
                 </tbody>
               </table></div>
-            </div>
-
-            <div class="panel tab-panel" data-tab="notifications">
-              <div class="panel-head"><h3>התראות</h3></div>
-              <div class="panel-body">
-                <div class="switch-row"><div><b>הזמנה חדשה</b><span>קבלת התראה בכל הזמנה חדשה שמתקבלת</span></div><label class="switch"><input type="checkbox" checked><span class="switch-track"></span></label></div>
-                <div class="switch-row"><div><b>מלאי נמוך</b><span>התראה כאשר מוצר מגיע לסף מלאי נמוך</span></div><label class="switch"><input type="checkbox" checked><span class="switch-track"></span></label></div>
-                <div class="switch-row"><div><b>ביקורת לקוח חדשה</b><span>התראה כאשר מתקבלת ביקורת חדשה על מוצר</span></div><label class="switch"><input type="checkbox"><span class="switch-track"></span></label></div>
-                <div class="switch-row"><div><b>דוח שבועי</b><span>סיכום ביצועים שבועי לתיבת האימייל</span></div><label class="switch"><input type="checkbox" checked><span class="switch-track"></span></label></div>
-              </div>
             </div>
 
             <div class="panel tab-panel" data-tab="shipping">
               <div class="panel-head"><h3>הגדרות משלוח</h3></div>
               <div class="panel-body">
                 <div class="form-grid">
-                  <div class="form-field"><label>עלות משלוח סטנדרטי</label><div class="field-prefix"><input class="field-input" value="25"><span>₪</span></div></div>
-                  <div class="form-field"><label>סף משלוח חינם</label><div class="field-prefix"><input class="field-input" value="500"><span>₪</span></div></div>
+                  <div class="form-field"><label>עלות משלוח סטנדרטי</label><div class="field-prefix"><input class="field-input" id="shipCostInput" type="number" min="0" step="1"><span>₪</span></div></div>
+                  <div class="form-field"><label>סף משלוח חינם</label><div class="field-prefix"><input class="field-input" id="shipFreeThresholdInput" type="number" min="0" step="1"><span>₪</span></div></div>
                 </div>
-                <div class="form-field full" style="margin-top:16px;"><label>שיטות משלוח פעילות</label></div>
-                <div class="radio-card checked" style="margin-top:8px;"><input type="radio" name="ship" checked><div><b style="font-size:12.8px;">שליח עד הבית</b><div class="hint">2–4 ימי עסקים</div></div></div>
-                <div class="radio-card" style="margin-top:8px;"><input type="radio" name="ship"><div><b style="font-size:12.8px;">איסוף עצמי מהחנות</b><div class="hint">זמין תוך יום עסקים אחד</div></div></div>
+                <p class="hint" style="display:block;margin-top:4px;">הזמנות בשיטת "שליח עד הבית" מעל הסכום הזה יקבלו משלוח חינם.</p>
               </div>
+              <div class="modal-foot" style="padding:0 20px 20px;border-top:none;justify-content:flex-start;"><button class="btn btn-primary" id="saveShippingBtn">שמירת שינויים</button></div>
             </div>
 
             <div class="panel tab-panel" data-tab="payment">
-              <div class="panel-head"><h3>הגדרות תשלום</h3></div>
+              <div class="panel-head"><h3>הגדרות תשלום</h3><div class="sub">שיטות תשלום פעילות בקופה</div></div>
               <div class="panel-body">
-                <div class="switch-row"><div><b>כרטיס אשראי</b><span>Visa, Mastercard, Isracard</span></div><label class="switch"><input type="checkbox" checked><span class="switch-track"></span></label></div>
-                <div class="switch-row"><div><b>PayPal</b><span>תשלום מאובטח דרך PayPal</span></div><label class="switch"><input type="checkbox" checked><span class="switch-track"></span></label></div>
-                <div class="switch-row"><div><b>Bit</b><span>תשלום מהיר באמצעות אפליקציית Bit</span></div><label class="switch"><input type="checkbox"><span class="switch-track"></span></label></div>
+                <div class="switch-row"><div><b>כרטיס אשראי</b><span>Visa, Mastercard, Isracard</span></div><label class="switch"><input type="checkbox" id="payMethodCard"><span class="switch-track"></span></label></div>
+                <div class="switch-row"><div><b>PayPal</b><span>תשלום מאובטח דרך PayPal</span></div><label class="switch"><input type="checkbox" id="payMethodPaypal"><span class="switch-track"></span></label></div>
+                <div class="switch-row"><div><b>Bit</b><span>תשלום מהיר באמצעות אפליקציית Bit</span></div><label class="switch"><input type="checkbox" id="payMethodBit"><span class="switch-track"></span></label></div>
               </div>
-            </div>
-
-            <div class="panel tab-panel" data-tab="general">
-              <div class="panel-head"><h3>הגדרות כלליות</h3></div>
-              <div class="panel-body">
-                <div class="form-grid">
-                  <div class="form-field"><label>שפת ממשק</label><select class="field-select"><option>עברית</option><option>English</option></select></div>
-                  <div class="form-field"><label>אזור זמן</label><select class="field-select"><option>ישראל (GMT+2)</option></select></div>
-                </div>
-                <div class="switch-row" style="margin-top:6px;"><div><b>מצב תחזוקה</b><span>הצגת עמוד "בקרוב" ללקוחות באתר</span></div><label class="switch"><input type="checkbox"><span class="switch-track"></span></label></div>
-              </div>
+              <div class="modal-foot" style="padding:0 20px 20px;border-top:none;justify-content:flex-start;"><button class="btn btn-primary" id="savePaymentBtn">שמירת שינויים</button></div>
             </div>
           </div>
         </div>
@@ -467,16 +431,26 @@
       <button class="modal-close" data-close-modal="productModal" aria-label="סגירה"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="tabs">
-      <button class="tab-btn active" data-tab="general">פרטים כלליים</button>
-      <button class="tab-btn" data-tab="media">תמונות</button>
-      <button class="tab-btn" data-tab="inventory">מלאי ומחיר</button>
+      <button class="tab-btn active" data-tab="general">כללי</button>
+      <button class="tab-btn" data-tab="pricing">תמחור</button>
+      <button class="tab-btn" data-tab="inventory">מלאי</button>
+      <button class="tab-btn" data-tab="description">תיאור</button>
+      <button class="tab-btn" data-tab="media">תמונה</button>
     </div>
     <div class="modal-body">
       <div class="tab-panel active" data-tab="general">
         <div class="form-grid">
-          <div class="form-field full"><label>שם המוצר</label><input class="field-input" id="pfName" placeholder="לדוגמה: חנוכיית כסף ירושלים"></div>
-          <div class="form-field full"><label>תיאור המוצר</label><textarea class="field-textarea" id="pfDesc" placeholder="תיאור מפורט, חומרים, מידות..."></textarea></div>
-          <div class="form-field"><label>קטגוריה</label><select class="field-select" id="pfCategory"></select></div>
+          <div class="form-field full">
+            <label>שם המוצר *</label>
+            <input class="field-input" id="pfName" placeholder="לדוגמה: חנוכיית כסף ירושלים">
+            <span class="field-error" id="pfNameError"></span>
+          </div>
+          <div class="form-field">
+            <label>מק"ט (SKU) *</label>
+            <input class="field-input" id="pfSku" placeholder="BJ-0000">
+            <span class="field-error" id="pfSkuError"></span>
+          </div>
+          <div class="form-field"><label>קטגוריה *</label><select class="field-select" id="pfCategory"></select></div>
           <div class="form-field"><label>סטטוס מוצר</label>
             <select class="field-select" id="pfStatus">
               <option value="active">פעיל</option>
@@ -486,31 +460,58 @@
           </div>
         </div>
       </div>
-      <div class="tab-panel" data-tab="media">
-        <div class="form-field full">
-          <label>תמונה ראשית</label>
-          <div class="upload-box">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
-            <b>גרירת קובץ לכאן או לחיצה להעלאה</b>
-            <span>PNG, JPG עד 5MB</span>
+      <div class="tab-panel" data-tab="pricing">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>מחיר נוכחי *</label>
+            <div class="field-prefix"><input class="field-input" id="pfPrice" type="number" min="0" step="1" placeholder="0"><span>₪</span></div>
+            <span class="field-error" id="pfPriceError"></span>
           </div>
-          <div class="upload-thumbs" id="productUploadThumbs"></div>
-        </div>
-        <div class="form-field full" style="margin-top:16px;">
-          <label>תמונות נוספות</label>
-          <div class="upload-box">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            <b>הוספת תמונות נוספות</b>
-            <span>ניתן להעלות עד 6 תמונות</span>
+          <div class="form-field">
+            <label>מחיר קודם <span class="hint">(אופציונלי — להצגת מבצע)</span></label>
+            <div class="field-prefix"><input class="field-input" id="pfOldPrice" type="number" min="0" step="1" placeholder="ללא"><span>₪</span></div>
+          </div>
+          <div class="form-field full">
+            <label>תגית מבצע</label>
+            <select class="field-select" id="pfBadge">
+              <option value="">ללא תגית</option>
+              <option value="new">חדש</option>
+              <option value="sale">מבצע</option>
+            </select>
           </div>
         </div>
       </div>
       <div class="tab-panel" data-tab="inventory">
         <div class="form-grid">
-          <div class="form-field"><label>מחיר</label><div class="field-prefix"><input class="field-input" id="pfPrice" type="number" placeholder="0"><span>₪</span></div></div>
-          <div class="form-field"><label>מק"ט (SKU)</label><input class="field-input" id="pfSku" placeholder="BJ-0000"></div>
-          <div class="form-field"><label>כמות במלאי</label><input class="field-input" id="pfStock" type="number" placeholder="0"></div>
-          <div class="form-field"><label>סף מלאי נמוך</label><input class="field-input" id="pfThreshold" type="number" value="5"></div>
+          <div class="form-field">
+            <label>כמות במלאי *</label>
+            <input class="field-input" id="pfStock" type="number" min="0" step="1" placeholder="0">
+            <span class="field-error" id="pfStockError"></span>
+          </div>
+          <div class="form-field">
+            <label>סף מלאי נמוך *</label>
+            <input class="field-input" id="pfThreshold" type="number" min="0" step="1" value="5">
+            <span class="field-error" id="pfThresholdError"></span>
+          </div>
+        </div>
+      </div>
+      <div class="tab-panel" data-tab="description">
+        <div class="form-grid">
+          <div class="form-field full"><label>תיאור קצר <span class="hint">(מוצג בכרטיס המוצר באתר)</span></label><input class="field-input" id="pfShort" placeholder="משפט אחד שמתאר את המוצר"></div>
+          <div class="form-field full"><label>תיאור מלא</label><textarea class="field-textarea" id="pfDesc" placeholder="תיאור מפורט, חומרים, מידות..."></textarea></div>
+          <div class="form-field"><label>חומר</label><input class="field-input" id="pfMaterial" placeholder="לדוגמה: כסף סטרלינג 925"></div>
+          <div class="form-field"><label>מידות</label><input class="field-input" id="pfDim" placeholder="לדוגמה: גובה 16 ס״מ"></div>
+        </div>
+      </div>
+      <div class="tab-panel" data-tab="media">
+        <div class="form-field full">
+          <label>תמונת מוצר <span class="hint">(קישור URL לתמונה מאוחסנת)</span></label>
+          <input class="field-input" id="pfImageUrl" type="url" placeholder="https://...">
+          <div class="img-preview-row">
+            <div id="pfImagePreview"></div>
+            <button type="button" class="btn btn-outline btn-sm" id="pfImageRemoveBtn">הסרת תמונה</button>
+          </div>
+          <span class="hint">אם לא תוגדר תמונה, יוצג סמל קטגוריה כברירת מחדל בכל מקום שהמוצר מופיע.</span>
         </div>
       </div>
     </div>
@@ -547,10 +548,11 @@
         </div>
       </div>
     </div>
-    <div class="modal-foot">
+    <div class="modal-foot" id="orderModalFoot">
       <div class="foot-left" id="orderModalFootStatus"></div>
-      <button class="btn btn-outline" data-close-modal="orderModal">סגירה</button>
-      <button class="btn btn-primary" data-close-modal="orderModal">עדכון סטטוס</button>
+      <select class="select-field" id="omStatusSelect"></select>
+      <button class="btn btn-danger" id="omCancelBtn">ביטול הזמנה</button>
+      <button class="btn btn-primary" id="omUpdateStatusBtn">עדכון סטטוס</button>
     </div>
   </div>
 </div>
@@ -563,9 +565,120 @@
     </div>
     <h3 id="confirmTitle">אישור פעולה</h3>
     <p id="confirmDesc" style="white-space:pre-line;"></p>
+    <div class="form-field hidden" id="confirmInputWrap" style="text-align:right;padding:0 24px;">
+      <label id="confirmInputLabel"></label>
+      <input class="field-input" id="confirmInputField" type="number">
+    </div>
     <div class="confirm-foot">
       <button class="btn btn-outline" id="confirmCancelBtn" data-close-modal="confirmModal">ביטול</button>
       <button class="btn btn-danger" id="confirmOkBtn">אישור</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Category Modal ===================== -->
+<div class="modal-overlay" id="categoryModal">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-label="הוספה ועריכת קטגוריה">
+    <div class="modal-head">
+      <div><h3 id="categoryModalTitle">הוספת קטגוריה</h3></div>
+      <button class="modal-close" data-close-modal="categoryModal" aria-label="סגירה"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>שם הקטגוריה (עברית) *</label>
+          <input class="field-input" id="cfLabel" placeholder="לדוגמה: כלי כסף">
+          <span class="field-error" id="cfLabelError"></span>
+        </div>
+        <div class="form-field full">
+          <label>מפתח טכני (אנגלית) *<span class="hint"> — משמש לשיוך מוצרים, לא ניתן לשינוי לאחר היצירה</span></label>
+          <input class="field-input" id="cfKey" placeholder="silverware">
+          <span class="field-error" id="cfKeyError"></span>
+        </div>
+        <div class="form-field"><label>סטטוס</label>
+          <select class="field-select" id="cfStatus">
+            <option value="active">פעיל</option>
+            <option value="inactive">לא פעיל</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" data-close-modal="categoryModal">ביטול</button>
+      <button class="btn btn-primary" id="saveCategoryBtn">שמירת קטגוריה</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Promotion Modal ===================== -->
+<div class="modal-overlay" id="promotionModal">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-label="הוספה ועריכת מבצע">
+    <div class="modal-head">
+      <div><h3 id="promotionModalTitle">יצירת מבצע</h3></div>
+      <button class="modal-close" data-close-modal="promotionModal" aria-label="סגירה"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label>שם המבצע *</label>
+          <input class="field-input" id="promoName" placeholder="לדוגמה: מבצע חנוכה">
+          <span class="field-error" id="promoNameError"></span>
+        </div>
+        <div class="form-field">
+          <label>קוד קופון *</label>
+          <input class="field-input" id="promoCode" placeholder="CHANUKAH26" style="text-transform:uppercase;">
+          <span class="field-error" id="promoCodeError"></span>
+        </div>
+        <div class="form-field">
+          <label>אחוז הנחה *<span class="hint"> (0 = משלוח חינם / ללא הנחת מחיר)</span></label>
+          <input class="field-input" id="promoDiscount" type="number" min="0" max="100" step="1" placeholder="0">
+          <span class="field-error" id="promoDiscountError"></span>
+        </div>
+        <div class="form-field">
+          <label>תאריך התחלה *</label>
+          <input class="field-input" id="promoStart" type="date">
+        </div>
+        <div class="form-field">
+          <label>תאריך סיום *</label>
+          <input class="field-input" id="promoEnd" type="date">
+          <span class="field-error" id="promoDatesError"></span>
+        </div>
+        <div class="form-field"><label>סטטוס</label>
+          <select class="field-select" id="promoStatus">
+            <option value="active">פעיל</option>
+            <option value="scheduled">מתוכנן</option>
+            <option value="expired">פג תוקף</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" data-close-modal="promotionModal">ביטול</button>
+      <button class="btn btn-primary" id="savePromotionBtn">שמירת מבצע</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Customer Details Modal ===================== -->
+<div class="modal-overlay" id="customerModal">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-label="פרטי לקוח">
+    <div class="modal-head">
+      <div><h3 id="customerModalTitle"></h3><div class="sub">פרטי לקוח והיסטוריית הזמנות</div></div>
+      <button class="modal-close" data-close-modal="customerModal" aria-label="סגירה"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="order-meta-grid" style="grid-template-columns:repeat(2,1fr);">
+        <div class="order-meta-card"><div class="eyebrow">פרטי קשר</div><div id="cmContact"></div></div>
+        <div class="order-meta-card"><div class="eyebrow">סיכום</div><div id="cmSummary"></div></div>
+      </div>
+      <h3 style="font-size:14px;margin-bottom:10px;">היסטוריית הזמנות</h3>
+      <div class="table-scroll"><table class="data-table">
+        <thead><tr><th>הזמנה</th><th>תאריך</th><th>סכום</th><th>סטטוס</th></tr></thead>
+        <tbody id="cmOrdersBody"></tbody>
+      </table></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" data-close-modal="customerModal">סגירה</button>
     </div>
   </div>
 </div>

@@ -36,13 +36,15 @@
  * @property {number} threshold         Stock level at/below which the product counts as "low stock".
  * @property {('active'|'draft'|'out')} status  Admin-facing lifecycle status.
  * @property {number} sold              Cumulative units sold (for "best sellers").
+ * @property {?string} image            URL/path to a hosted product photo, or null.
  *
- * Presentation-only note: product photography is intentionally NOT part
- * of this model. Each app resolves its own images for a product id from
- * a local asset map (see USER_PRODUCT_IMAGES in index.html and the
- * icon-based placeholders in admin/js/data.js) — the same way a real
- * app would resolve an `imageUrl`/CDN key without inlining binary data
- * into the shared business-data layer.
+ * Presentation-only note: `image` is a URL string, never binary data —
+ * MongoDB stores a reference, not the photo itself. The customer site's
+ * original 17-product catalog still resolves its real photography from a
+ * local asset map (see PRODUCT_IMAGES in index.html) since those photos
+ * predate this field and aren't hosted anywhere with a URL yet; any new
+ * or edited product uses `image` directly, with a placeholder icon shown
+ * wherever it's null (see thumbHtml/productImgHtml in admin/js/admin.js).
  */
 
 /**
@@ -107,4 +109,7 @@
  * @property {string} address
  * @property {string} currency
  * @property {string} description
+ * @property {number} shippingCost              Standard shipping cost, in ILS.
+ * @property {number} freeShippingThreshold     Order subtotal at/above which shipping is free.
+ * @property {string[]} paymentMethods          Enabled payment method keys, e.g. ["credit_card","paypal"].
  */

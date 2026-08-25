@@ -44,6 +44,7 @@ def create_product(data):
     doc.setdefault("badge", None)
     doc.setdefault("status", "active")
     doc.setdefault("sold", 0)
+    doc.setdefault("image", None)
 
     db.products.insert_one(doc)
     return serialize(doc)

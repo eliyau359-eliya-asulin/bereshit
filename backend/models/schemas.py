@@ -52,7 +52,14 @@ PRODUCT_SPEC = {
     "threshold": (int, True),
     "status": (str, False),
     "sold": (int, False),
+    "image": (str, False),  # URL/path to a hosted product photo; None = use the UI's placeholder
 }
+
+# Valid forward workflow. Cancellation ("בוטל") is allowed from either of
+# the first two states only — handled as a special case in orders_service,
+# not in this table, since it's not a "next step" but a side-exit.
+ORDER_STATUS_FLOW = ["ממתין לאישור", "בטיפול", "נשלח", "נמסר"]
+ORDER_CANCELLABLE_FROM = {"ממתין לאישור", "בטיפול"}
 
 ORDER_UPDATE_SPEC = {
     "status": (str, False),
@@ -68,6 +75,13 @@ PROMOTION_SPEC = {
     "status": (str, False),
 }
 
+CATEGORY_SPEC = {
+    "key": (str, True),
+    "label": (str, True),
+    "status": (str, False),
+    "order": (int, False),
+}
+
 STORE_INFO_SPEC = {
     "name": (str, False),
     "email": (str, False),
@@ -75,4 +89,7 @@ STORE_INFO_SPEC = {
     "address": (str, False),
     "currency": (str, False),
     "description": (str, False),
+    "shippingCost": (NUMBER, False),
+    "freeShippingThreshold": (NUMBER, False),
+    "paymentMethods": (list, False),
 }

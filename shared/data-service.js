@@ -74,6 +74,11 @@
 
     /* ---------------- Categories ---------------- */
     getCategories(){ return request('/categories'); },
+    getCategory(key){ return request(`/categories/${key}`); },
+    createCategory(data){ return request('/categories', { method:'POST', body: JSON.stringify(data) }); },
+    updateCategory(key, patch){ return request(`/categories/${key}`, { method:'PUT', body: JSON.stringify(patch) }); },
+    /** Rejects with a message naming the product count if the category is still in use. */
+    deleteCategory(key){ return request(`/categories/${key}`, { method:'DELETE' }); },
 
     /* ---------------- Orders ---------------- */
     getOrders(filters){
