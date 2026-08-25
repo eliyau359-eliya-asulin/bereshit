@@ -387,14 +387,14 @@
               <div class="panel-head"><h3>פרטי חנות</h3></div>
               <div class="panel-body">
                 <div class="form-grid">
-                  <div class="form-field"><label>שם החנות</label><input class="field-input" value="בראשית יודאיקה"></div>
-                  <div class="form-field"><label>אימייל ליצירת קשר</label><input class="field-input" value="info@bereshit-judaica.co.il"></div>
-                  <div class="form-field"><label>טלפון</label><input class="field-input" value="03-1234567"></div>
+                  <div class="form-field"><label>שם החנות</label><input class="field-input" id="storeInfoName"></div>
+                  <div class="form-field"><label>אימייל ליצירת קשר</label><input class="field-input" id="storeInfoEmail"></div>
+                  <div class="form-field"><label>טלפון</label><input class="field-input" id="storeInfoPhone"></div>
                   <div class="form-field"><label>מטבע</label><select class="field-select"><option>שקל חדש (₪)</option></select></div>
-                  <div class="form-field full"><label>כתובת</label><input class="field-input" value="רחוב יפו 22, ירושלים"></div>
-                  <div class="form-field full"><label>תיאור החנות</label><textarea class="field-textarea">בית מלאכה לכלי כסף וטקס — יודאיקה איכותית בעבודת יד.</textarea></div>
+                  <div class="form-field full"><label>כתובת</label><input class="field-input" id="storeInfoAddress"></div>
+                  <div class="form-field full"><label>תיאור החנות</label><textarea class="field-textarea" id="storeInfoDesc"></textarea></div>
                 </div>
-                <div class="modal-foot" style="padding:20px 0 0;border-top:none;justify-content:flex-start;"><button class="btn btn-primary">שמירת שינויים</button></div>
+                <div class="modal-foot" style="padding:20px 0 0;border-top:none;justify-content:flex-start;"><button class="btn btn-primary" id="saveStoreInfoBtn">שמירת שינויים</button></div>
               </div>
             </div>
 
@@ -574,6 +574,10 @@
 <div class="toast" id="toast"><span class="stamp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span><span id="toastText"></span></div>
 
 <script src="assets/brand-logo.js"></script>
+<!-- Shared frontend data layer (also used by the customer-facing site) -->
+<script src="../shared/models.js"></script>
+<script src="../shared/mock-data.js"></script>
+<script src="../shared/data-service.js"></script>
 <script src="js/data.js"></script>
 <script src="js/admin.js"></script>
 </body>

@@ -526,7 +526,24 @@
     `;
     $$('[data-adjust]').forEach(b=> b.addEventListener('click', ()=>{
       const p = PRODUCTS.find(x=>x.id===b.dataset.adjust);
-      openConfirm({ title:'עדכון מלאי', desc:`${p.name} — מלאי נוכחי: ${p.stock} יחידות.`, confirmLabel:'שמור עדכון', onConfirm:()=> toast('המלאי עודכן (הדגמה חזותית בלבד)') });
+      const restockQty = 10;
+      const newStock = p.stock + restockQty;
+      openConfirm({
+        title:'עדכון מלאי',
+        desc:`${p.name}\nהוספת ${restockQty} יחידות למלאי: ${p.stock} ← ${newStock}.\n\nהעדכון יישמר בשכבת הנתונים המשותפת (BereshitData) ויהיה זמין גם לאתר הלקוחות בטעינה הבאה.`,
+        confirmLabel:'עדכן מלאי',
+        onConfirm:()=>{
+          BereshitData.updateInventory(p.sharedId, newStock);
+          p.stock = newStock;
+          p.status = newStock > 0 ? (p.status==='draft' ? 'draft' : 'active') : 'out';
+          renderKPIs();
+          renderLowStock();
+          renderInventory();
+          renderProducts();
+          $('#lowStockBadge').textContent = PRODUCTS.filter(x=>x.stock<=x.threshold).length;
+          toast('המלאי עודכן ונשמר בשכבת הנתונים המשותפת');
+        }
+      });
     }));
   }
   function initInventoryPage(){
@@ -568,7 +585,28 @@
         $$('#settingsPage .tab-panel').forEach(p=>p.classList.toggle('active', p.dataset.tab===btn.dataset.tab));
       });
     });
-    $$('#settingsPage .btn-primary').forEach(b=> b.addEventListener('click', ()=> toast('ההגדרות נשמרו (הדגמה חזותית בלבד)')));
+    $$('#settingsPage .btn-primary').forEach(b=>{
+      if(b.id==='saveStoreInfoBtn') return;
+      b.addEventListener('click', ()=> toast('ההגדרות נשמרו (הדגמה חזותית בלבד)'));
+    });
+
+    $('#storeInfoName').value = STORE_INFO.name;
+    $('#storeInfoEmail').value = STORE_INFO.email;
+    $('#storeInfoPhone').value = STORE_INFO.phone;
+    $('#storeInfoAddress').value = STORE_INFO.address;
+    $('#storeInfoDesc').value = STORE_INFO.description;
+
+    $('#saveStoreInfoBtn').addEventListener('click', ()=>{
+      const patch = {
+        name: $('#storeInfoName').value.trim(),
+        email: $('#storeInfoEmail').value.trim(),
+        phone: $('#storeInfoPhone').value.trim(),
+        address: $('#storeInfoAddress').value.trim(),
+        description: $('#storeInfoDesc').value.trim(),
+      };
+      Object.assign(STORE_INFO, BereshitData.updateStoreInfo(patch));
+      toast('פרטי החנות נשמרו בשכבת הנתונים המשותפת');
+    });
   }
 
   /* ================= Modals (generic open/close) ================= */
