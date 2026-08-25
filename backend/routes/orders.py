@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from pymongo.errors import PyMongoError
 
-from models.schemas import ValidationError
-from services import orders_service as svc
+from backend.models.schemas import ValidationError
+from backend.services import orders_service as svc
 
 bp = Blueprint("orders", __name__, url_prefix="/api/orders")
 

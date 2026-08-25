@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
 from pymongo.errors import PyMongoError
 
-from services import customers_service as svc
+from backend.services import customers_service as svc
 
 bp = Blueprint("customers", __name__, url_prefix="/api/customers")
 

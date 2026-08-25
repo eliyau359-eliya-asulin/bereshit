@@ -1,4 +1,4 @@
-from db.mongo import get_db
+from backend.db.mongo import get_db
 
 
 def _serialize(doc):

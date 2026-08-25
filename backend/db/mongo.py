@@ -5,7 +5,7 @@ through get_db() — this is the one place that knows how to reach MongoDB.
 from pymongo import MongoClient, ASCENDING
 from pymongo.errors import ConfigurationError
 
-from config import Config
+from backend.config import Config
 
 _client = None
 _db = None

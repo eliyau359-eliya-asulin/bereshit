@@ -6,9 +6,9 @@ site, exactly as requested: PUT /api/products/123 updates _id=123.
 """
 from pymongo import ReturnDocument
 
-from db.mongo import get_db
-from models.schemas import validate_fields, PRODUCT_SPEC, ValidationError
-from services.common import serialize, serialize_many
+from backend.db.mongo import get_db
+from backend.models.schemas import validate_fields, PRODUCT_SPEC, ValidationError
+from backend.services.common import serialize, serialize_many
 
 
 def list_products(filters=None):

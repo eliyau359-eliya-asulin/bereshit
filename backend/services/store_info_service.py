@@ -1,9 +1,9 @@
 """Store info is a singleton document — one row describing the shop itself."""
 from pymongo import ReturnDocument
 
-from db.mongo import get_db
-from models.schemas import validate_fields, STORE_INFO_SPEC, ValidationError
-from services.common import serialize
+from backend.db.mongo import get_db
+from backend.models.schemas import validate_fields, STORE_INFO_SPEC, ValidationError
+from backend.services.common import serialize
 
 STORE_INFO_ID = "store_info"
 

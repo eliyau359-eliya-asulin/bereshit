@@ -4,19 +4,19 @@ Customer website  --\
                       -->  Flask API  -->  MongoDB
 Admin dashboard   --/
 
-Run: python app.py   (from the backend/ directory)
+Run (from the BERESHIT project root): python -m backend.app
 """
 from flask import Flask, jsonify
 from flask_cors import CORS
 
-from config import Config
-from db.mongo import get_db, create_indexes, ping
-from routes.products import bp as products_bp
-from routes.categories import bp as categories_bp
-from routes.orders import bp as orders_bp
-from routes.customers import bp as customers_bp
-from routes.promotions import bp as promotions_bp
-from routes.store_info import bp as store_info_bp
+from backend.config import Config
+from backend.db.mongo import get_db, create_indexes, ping
+from backend.routes.products import bp as products_bp
+from backend.routes.categories import bp as categories_bp
+from backend.routes.orders import bp as orders_bp
+from backend.routes.customers import bp as customers_bp
+from backend.routes.promotions import bp as promotions_bp
+from backend.routes.store_info import bp as store_info_bp
 
 
 def create_app():

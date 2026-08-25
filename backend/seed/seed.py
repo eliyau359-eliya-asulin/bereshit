@@ -3,17 +3,12 @@ Seeds MongoDB with the starting catalog. Safe to re-run: each collection
 listed below is cleared and reloaded, so the database ends up exactly
 matching seed_data.py.
 
-Usage (from the backend/ directory):
-    python -m seed.seed
+Usage (from the BERESHIT project root):
+    python -m backend.seed.seed
 """
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # allow `import config`, `import db...`
-
-from config import Config
-from db.mongo import get_db, create_indexes, ping
-from seed.seed_data import PRODUCTS, CATEGORIES, CUSTOMERS, ORDERS, PROMOTIONS, STORE_INFO
+from backend.config import Config
+from backend.db.mongo import get_db, create_indexes, ping
+from backend.seed.seed_data import PRODUCTS, CATEGORIES, CUSTOMERS, ORDERS, PROMOTIONS, STORE_INFO
 
 
 def _with_mongo_id(doc):

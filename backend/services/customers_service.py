@@ -1,5 +1,5 @@
-from db.mongo import get_db
-from services.common import serialize, serialize_many
+from backend.db.mongo import get_db
+from backend.services.common import serialize, serialize_many
 
 
 def list_customers():
