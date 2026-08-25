@@ -1,0 +1,6 @@
+# Vercel's Python builder looks for requirements.txt at the project root.
+# Keep this in sync with backend/requirements.txt (used for local dev).
+Flask==3.1.3
+flask-cors==6.0.5
+pymongo==4.10.1
+python-dotenv==1.0.1

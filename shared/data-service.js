@@ -9,9 +9,15 @@
    fallback: if the API is unreachable, calls reject and the caller is
    expected to show that (see index.html / admin/js/admin.js).
 
-   Set window.BERESHIT_API_BASE before this script loads to point at a
-   non-default API location; otherwise it defaults to the Flask dev
-   server's usual address.
+   Set window.BERESHIT_API_BASE before this script loads to force a
+   specific API location. Otherwise the default is environment-aware:
+   - In production (deployed on Vercel), the API is served from the
+     same origin under /api via vercel.json's rewrite, so a relative
+     '/api' is correct and never bakes a hostname into the static files.
+   - In local dev, the static frontend (e.g. `python -m http.server` on
+     :8123) and the Flask API (:5000) run as two separate origins, so
+     localhost/127.0.0.1 on any port other than 5000 talks to the Flask
+     dev server explicitly.
 
    Cross-tab / live real-time sync (SSE, WebSockets) is not implemented
    yet — every method here just does one HTTP request and resolves with
@@ -20,7 +26,14 @@
 (function(global){
   'use strict';
 
-  const API_BASE = global.BERESHIT_API_BASE || 'http://localhost:5000/api';
+  function defaultApiBase(){
+    const { hostname, port, protocol } = global.location || {};
+    const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const isSeparateDevServer = isLocalHost && port && port !== '5000';
+    return isSeparateDevServer ? `${protocol}//${hostname}:5000/api` : '/api';
+  }
+
+  const API_BASE = global.BERESHIT_API_BASE || defaultApiBase();
 
   async function request(path, options){
     let res;

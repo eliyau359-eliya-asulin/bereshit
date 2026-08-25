@@ -1,0 +1,15 @@
+# Defense in depth: Vercel CLI deploys upload the local directory and
+# fall back to .gitignore only when this file is absent. Never let a
+# local `vercel deploy` upload secrets or dev-only artifacts.
+.env
+backend/.env
+*.env
+!.env.example
+
+.git
+.claude
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
