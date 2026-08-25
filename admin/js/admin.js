@@ -301,12 +301,26 @@
   }
   function bindProductRowActions(){
     $$('[data-edit-product]').forEach(b=> b.addEventListener('click', ()=> openProductModal(b.dataset.editProduct)));
-    $$('[data-delete-product]').forEach(b=> b.addEventListener('click', ()=> openConfirm({
-      title:'מחיקת מוצר',
-      desc:'הפעולה תמחק את המוצר לצמיתות מהקטלוג. לא ניתן לבטל פעולה זו.',
-      confirmLabel:'מחק מוצר',
-      onConfirm: ()=>{ toast('המוצר נמחק (הדגמה חזותית בלבד)'); }
-    })));
+    $$('[data-delete-product]').forEach(b=> b.addEventListener('click', ()=>{
+      const p = PRODUCTS.find(x=>x.id===b.dataset.deleteProduct);
+      openConfirm({
+        title:'מחיקת מוצר',
+        desc:`${p.name}\n\nהפעולה תמחק את המוצר לצמיתות מ-MongoDB. לא ניתן לבטל פעולה זו.`,
+        confirmLabel:'מחק מוצר',
+        onConfirm: async ()=>{
+          try{
+            await BereshitData.deleteProduct(p.sharedId);
+            const idx = PRODUCTS.indexOf(p);
+            if(idx > -1) PRODUCTS.splice(idx, 1);
+            renderKPIs(); renderProducts(); renderInventory(); renderCategories();
+            $('#lowStockBadge').textContent = PRODUCTS.filter(x=>x.stock<=x.threshold).length;
+            toast('המוצר נמחק');
+          }catch(err){
+            toast('מחיקת המוצר נכשלה: ' + err.message);
+          }
+        }
+      });
+    }));
   }
   function initProductsPage(){
     $('#productCatFilter').innerHTML = `<option value="">כל הקטגוריות</option>` + CAT_LIST.map(c=>`<option value="${c}">${c}</option>`).join('');
@@ -325,23 +339,66 @@
   }
 
   /* ---- Product modal ---- */
+  function catKeyForLabel(label){
+    const c = CATEGORIES.find(x=>x.name===label);
+    return c ? c.key : CATEGORIES[0].key;
+  }
+
+  let productModalToken = 0;
+
   function openProductModal(id){
     const p = id ? PRODUCTS.find(x=>x.id===id) : null;
+    const myToken = ++productModalToken; // guards against a stale async response landing after a newer modal open
     $('#productModalTitle').textContent = p ? 'עריכת מוצר' : 'הוספת מוצר חדש';
     $('#productModalSub').textContent = p ? p.name : 'הוסף מוצר חדש לקטלוג בראשית יודאיקה';
     $('#pfName').value = p ? p.name : '';
-    $('#pfDesc').value = p ? 'תיאור מפורט של המוצר, חומרים, מידות ומידע נוסף ללקוח.' : '';
+    $('#pfDesc').value = '';
     $('#pfPrice').value = p ? p.price : '';
     $('#pfCategory').innerHTML = CAT_LIST.map(c=>`<option ${p&&p.cat===c?'selected':''}>${c}</option>`).join('');
     $('#pfSku').value = p ? p.sku : 'BJ-' + Math.floor(1000+Math.random()*9000);
     $('#pfStock').value = p ? p.stock : '';
+    $('#pfThreshold').value = p ? p.threshold : 5;
     $('#pfStatus').value = p ? p.status : 'active';
     $('#productUploadThumbs').innerHTML = p ? thumbHtml(p.cat,56) : '';
-    $('#saveProductBtn').onclick = ()=>{
-      closeModal('#productModal');
-      toast(p ? 'המוצר עודכן בהצלחה' : 'המוצר נוסף בהצלחה');
-    };
     openModal('#productModal');
+
+    // Assigned synchronously, before any await, so a save click is never
+    // handled by a handler left over from a previous modal open.
+    $('#saveProductBtn').onclick = async ()=>{
+      const catLabel = $('#pfCategory').value;
+      const payload = {
+        name: $('#pfName').value.trim(),
+        desc: $('#pfDesc').value.trim(),
+        price: Number($('#pfPrice').value),
+        cat: catKeyForLabel(catLabel),
+        catLabel,
+        sku: $('#pfSku').value.trim(),
+        stock: Number($('#pfStock').value),
+        threshold: Number($('#pfThreshold').value),
+        status: $('#pfStatus').value,
+      };
+      try{
+        if(p){
+          const updated = await BereshitData.updateProduct(p.sharedId, payload);
+          Object.assign(p, { name:updated.name, cat:updated.catLabel, price:updated.price, stock:updated.stock, threshold:updated.threshold, sku:updated.sku, status:updated.status });
+        } else {
+          const created = await BereshitData.createProduct(payload);
+          PRODUCTS.push({ id:String(created.id), sharedId:created.id, name:created.name, cat:created.catLabel, price:created.price, stock:created.stock, threshold:created.threshold, sku:created.sku, status:created.status, sold:created.sold });
+        }
+        closeModal('#productModal');
+        renderKPIs(); renderProducts(); renderInventory(); renderCategories(); renderBestSellers();
+        $('#lowStockBadge').textContent = PRODUCTS.filter(x=>x.stock<=x.threshold).length;
+        toast(p ? 'המוצר עודכן בהצלחה' : 'המוצר נוסף בהצלחה');
+      }catch(err){
+        toast('שמירת המוצר נכשלה: ' + err.message);
+      }
+    };
+
+    if(p){
+      BereshitData.getProduct(p.sharedId).then(full=>{
+        if(productModalToken === myToken) $('#pfDesc').value = full.desc || '';
+      }).catch(()=>{ /* keep the form usable even if this extra fetch fails */ });
+    }
   }
 
   /* ================= Orders page ================= */
@@ -532,16 +589,20 @@
         title:'עדכון מלאי',
         desc:`${p.name}\nהוספת ${restockQty} יחידות למלאי: ${p.stock} ← ${newStock}.\n\nהעדכון יישמר בשכבת הנתונים המשותפת (BereshitData) ויהיה זמין גם לאתר הלקוחות בטעינה הבאה.`,
         confirmLabel:'עדכן מלאי',
-        onConfirm:()=>{
-          BereshitData.updateInventory(p.sharedId, newStock);
-          p.stock = newStock;
-          p.status = newStock > 0 ? (p.status==='draft' ? 'draft' : 'active') : 'out';
-          renderKPIs();
-          renderLowStock();
-          renderInventory();
-          renderProducts();
-          $('#lowStockBadge').textContent = PRODUCTS.filter(x=>x.stock<=x.threshold).length;
-          toast('המלאי עודכן ונשמר בשכבת הנתונים המשותפת');
+        onConfirm: async ()=>{
+          try{
+            const updated = await BereshitData.updateInventory(p.sharedId, newStock);
+            p.stock = updated.stock;
+            p.status = updated.status;
+            renderKPIs();
+            renderLowStock();
+            renderInventory();
+            renderProducts();
+            $('#lowStockBadge').textContent = PRODUCTS.filter(x=>x.stock<=x.threshold).length;
+            toast('המלאי עודכן ונשמר ב-MongoDB');
+          }catch(err){
+            toast('עדכון המלאי נכשל: ' + err.message);
+          }
         }
       });
     }));
@@ -596,7 +657,7 @@
     $('#storeInfoAddress').value = STORE_INFO.address;
     $('#storeInfoDesc').value = STORE_INFO.description;
 
-    $('#saveStoreInfoBtn').addEventListener('click', ()=>{
+    $('#saveStoreInfoBtn').addEventListener('click', async ()=>{
       const patch = {
         name: $('#storeInfoName').value.trim(),
         email: $('#storeInfoEmail').value.trim(),
@@ -604,8 +665,13 @@
         address: $('#storeInfoAddress').value.trim(),
         description: $('#storeInfoDesc').value.trim(),
       };
-      Object.assign(STORE_INFO, BereshitData.updateStoreInfo(patch));
-      toast('פרטי החנות נשמרו בשכבת הנתונים המשותפת');
+      try{
+        const updated = await BereshitData.updateStoreInfo(patch);
+        Object.assign(STORE_INFO, updated);
+        toast('פרטי החנות נשמרו ב-MongoDB');
+      }catch(err){
+        toast('שמירת פרטי החנות נכשלה: ' + err.message);
+      }
     });
   }
 
@@ -675,7 +741,7 @@
   }
 
   /* ================= Init ================= */
-  function boot(){
+  async function boot(){
     $('#brandLogoImg').src = BRAND_LOGO;
     $('#adminAvatarInitials').textContent = ADMIN_USER.initials;
     $('#topbarAvatarInitials').textContent = ADMIN_USER.initials;
@@ -683,6 +749,15 @@
     $('#sidebarAdminRole').textContent = ADMIN_USER.role;
     $('#topbarAdminName').textContent = ADMIN_USER.name;
     $('#topbarAdminRole').textContent = ADMIN_USER.role;
+
+    try{
+      await loadAdminData();
+    }catch(err){
+      console.error('[Bereshit Admin] Failed to load data from the API:', err);
+      toast('לא ניתן להתחבר לשרת ה-API. ודא שה-Flask server רץ ורענן את הדף.');
+      return;
+    }
+
     $('#lowStockBadge').textContent = PRODUCTS.filter(p=>p.stock<=p.threshold).length;
 
     initSidebarNav();

@@ -1,0 +1,18 @@
+# Environment variables (secrets — never commit)
+.env
+backend/.env
+*.env
+!.env.example
+!backend/.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+Thumbs.db

@@ -50,6 +50,9 @@
  * @property {string} key               Stable machine key (e.g. "kiddush").
  * @property {string} label             Hebrew display label.
  * @property {('active'|'inactive')} status  Admin-facing lifecycle status.
+ * @property {number} order             Curated display order for the storefront's
+ *                                       category navigation — MongoDB's default _id
+ *                                       sort is alphabetical, not display order.
  */
 
 /**

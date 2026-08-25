@@ -510,7 +510,7 @@
           <div class="form-field"><label>מחיר</label><div class="field-prefix"><input class="field-input" id="pfPrice" type="number" placeholder="0"><span>₪</span></div></div>
           <div class="form-field"><label>מק"ט (SKU)</label><input class="field-input" id="pfSku" placeholder="BJ-0000"></div>
           <div class="form-field"><label>כמות במלאי</label><input class="field-input" id="pfStock" type="number" placeholder="0"></div>
-          <div class="form-field"><label>סף מלאי נמוך</label><input class="field-input" value="5"></div>
+          <div class="form-field"><label>סף מלאי נמוך</label><input class="field-input" id="pfThreshold" type="number" value="5"></div>
         </div>
       </div>
     </div>
@@ -576,7 +576,7 @@
 <script src="assets/brand-logo.js"></script>
 <!-- Shared frontend data layer (also used by the customer-facing site) -->
 <script src="../shared/models.js"></script>
-<script src="../shared/mock-data.js"></script>
+<script>window.BERESHIT_API_BASE = window.BERESHIT_API_BASE || 'http://localhost:5000/api';</script>
 <script src="../shared/data-service.js"></script>
 <script src="js/data.js"></script>
 <script src="js/admin.js"></script>

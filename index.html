@@ -1458,10 +1458,10 @@
 </div>
 
 <!-- Shared frontend data layer (also used by the admin dashboard). Business
-     data (products/categories/etc.) now comes from here instead of being
-     duplicated inline — see shared/data-service.js. -->
+     data (products/categories/etc.) comes from the Flask API + MongoDB
+     (backend/) via shared/data-service.js instead of being inlined here. -->
 <script src="shared/models.js"></script>
-<script src="shared/mock-data.js"></script>
+<script>window.BERESHIT_API_BASE = window.BERESHIT_API_BASE || 'http://localhost:5000/api';</script>
 <script src="shared/data-service.js"></script>
 
 <script>
@@ -1494,12 +1494,10 @@ const CATEGORY_COVER_IMAGES = {
   kiddush:IMG_KIDDUSH_TRAY, candles:IMG_CANDLESTICKS, menorahs:IMG_MENORAH_SWIRL_A,
   shabbat:IMG_KNIFE_HAMMERED, havdalah:IMG_HAVDALAH_TOWER, gifts:IMG_MEZUZAH, silverware:IMG_HAVDALAH_SET,
 };
-const CATEGORIES = BereshitData.getCategories().map(c => ({
-  key:c.key, label:c.label, img:CATEGORY_COVER_IMAGES[c.key],
-}));
+let CATEGORIES = [];
 
 /* Product business data (name/price/description/etc.) comes from the shared
-   data layer (shared/mock-data.js via shared/data-service.js) — the same
+   data layer (Flask API + MongoDB, via shared/data-service.js) — the same
    catalog the admin dashboard reads and can update. Product photography is
    presentation-only and stays local: each product's images never left this
    file, they're just resolved by id below instead of living inside a
@@ -1523,17 +1521,32 @@ const PRODUCT_IMAGES = {
   16:[IMG_MEZUZAH_FLORAL,IMG_MEZUZAH_LETTER],
   17:[IMG_CANDELABRA_SIX,IMG_CANDLESTICKS],
 };
-const PRODUCTS = BereshitData.getProducts().map(p => ({
-  id:p.id, cat:p.cat, catLabel:p.catLabel, name:p.name, price:p.price, oldPrice:p.oldPrice, badge:p.badge,
-  short:p.short, desc:p.desc, material:p.material, dim:p.dim,
-  images:PRODUCT_IMAGES[p.id] || [],
-  /* stock/status are carried through but not yet rendered anywhere on the
-     storefront — no existing UI/behavior reads them. They're here so the
-     admin → shared data → storefront flow is real today (open devtools
-     after an admin inventory update + reload and PRODUCTS[i].stock is the
-     new value), ready for a future "out of stock" UI to switch on them. */
-  stock:p.stock, status:p.status,
-}));
+let PRODUCTS = [];
+
+/* Loads categories/products from the API and populates the module-level
+   CATEGORIES/PRODUCTS arrays in place (not reassigned — every render
+   function below closes over these same array references). Called once
+   at the bottom of this script, before the first render. */
+async function loadCatalog(){
+  const [categories, products] = await Promise.all([
+    BereshitData.getCategories(),
+    BereshitData.getProducts(),
+  ]);
+  CATEGORIES.push(...categories.map(c => ({
+    key:c.key, label:c.label, img:CATEGORY_COVER_IMAGES[c.key],
+  })));
+  PRODUCTS.push(...products.map(p => ({
+    id:p.id, cat:p.cat, catLabel:p.catLabel, name:p.name, price:p.price, oldPrice:p.oldPrice, badge:p.badge,
+    short:p.short, desc:p.desc, material:p.material, dim:p.dim,
+    images:PRODUCT_IMAGES[p.id] || [],
+    /* stock/status are carried through but not yet rendered anywhere on the
+       storefront — no existing UI/behavior reads them. They're here so the
+       admin → API → MongoDB → storefront flow is real today (open devtools
+       after an admin inventory update + reload and PRODUCTS[i].stock is the
+       new value), ready for a future "out of stock" UI to switch on them. */
+    stock:p.stock, status:p.status,
+  })));
+}
 
 /* ==================== STATE ==================== */
 let cart = JSON.parse(localStorage.getItem('nezer_cart') || '[]');
@@ -2005,11 +2018,20 @@ window.addEventListener('scroll', () => {
 document.getElementById('heroImg').src = IMG_KIDDUSH_TRAY;
 document.getElementById('headerLogo').src = LOGO_IMG;
 document.getElementById('footerLogo').src = LOGO_IMG;
-renderCategories();
-renderDesktopNav();
-renderProductGrid();
-updateBagCount();
-updateFavCount();
+
+(async function boot(){
+  try{
+    await loadCatalog();
+  }catch(err){
+    console.error('[Bereshit] Failed to load products/categories from the API:', err);
+    showToast('לא ניתן לטעון את קטלוג המוצרים כרגע. נסו לרענן את הדף.');
+  }
+  renderCategories();
+  renderDesktopNav();
+  renderProductGrid();
+  updateBagCount();
+  updateFavCount();
+})();
 </script>
 </body>
 </html>

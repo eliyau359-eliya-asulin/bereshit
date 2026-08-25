@@ -1,18 +1,14 @@
 /* ===================================================================
-   Bereshit Judaica — Canonical Mock Data
+   Bereshit Judaica — Mock Data (SUPERSEDED — kept for reference only)
    ===================================================================
-   The ONE place raw business data lives for both the customer site
-   and the admin dashboard (see shared/models.js for field shapes).
+   MongoDB is now the source of truth (see backend/). This file is no
+   longer loaded by index.html or admin/index.html — shared/data-service.js
+   talks to the real Flask API instead. backend/seed/seed_data.py is the
+   Python port of this exact catalog used to seed MongoDB; if you need to
+   reseed or reset demo data, edit that file, not this one.
 
-   This is a stand-in for a future backend. Nothing here is imported
-   directly by the UI — always go through shared/data-service.js so
-   swapping this file for real API calls later doesn't touch any page.
-
-   Product catalog below matches the storefront's real 17-item
-   catalog (previously inlined in index.html) plus the admin-facing
-   fields (sku, stock, threshold, status, sold) that a real backend
-   would also serve. Product order is meaningful — it's the curated
-   "all products" display order used by the storefront.
+   Left in the repo only as a readable record of the original catalog
+   this project shipped with.
    =================================================================== */
 (function(global){
   'use strict';
