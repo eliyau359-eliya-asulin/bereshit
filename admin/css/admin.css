@@ -142,6 +142,7 @@ table{border-collapse:collapse;width:100%;}
   transition:background .16s ease, color .16s ease;
   white-space:nowrap;
   overflow:hidden;
+  cursor:pointer;
 }
 .nav-item .icon{stroke-width:1.4;opacity:0.9;}
 .nav-item:hover{background:rgba(248,246,241,0.06);color:var(--ivory);}
