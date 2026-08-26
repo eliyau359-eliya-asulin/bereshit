@@ -240,6 +240,7 @@
   .btn-primary{background:var(--green);color:var(--ivory);}
   .btn-primary:active{background:var(--green-deep);}
   .btn-primary.in-cart{background:var(--gold);color:var(--green-deep);}
+  .btn:disabled{background:#c9c5bd;color:#8a8780;cursor:not-allowed;}
   .btn-gold{background:var(--gold);color:var(--white);}
   .btn-outline{background:transparent;border:1px solid currentColor;}
   .btn-outline-light{border:1px solid rgba(248,246,241,0.55);color:var(--ivory);}
@@ -346,6 +347,7 @@
   .badge .stamp{width:10px;height:10px;color:var(--ivory);}
   .badge.sale{background:#a3453a;border-color:#a3453a;color:var(--ivory);}
   .badge.sale .stamp{color:var(--ivory);}
+  .badge.out{background:var(--ink);border-color:var(--ink);color:var(--ivory);}
 
   .card-fav{
     position:absolute;
@@ -372,6 +374,9 @@
   .card-cat{font-size:10.5px;color:var(--gold);letter-spacing:0.05em;font-weight:600;}
   .card-name{font-weight:600;font-size:15px;line-height:1.3;}
   .card-desc{font-size:11.5px;color:var(--ink-soft);line-height:1.4;flex:1;}
+  .stock-note{font-size:11px;font-weight:700;margin:0;}
+  .stock-note.last{color:#a3453a;}
+  .stock-note.low{color:var(--gold);}
   .card-foot{
     display:flex;
     align-items:center;
@@ -392,6 +397,7 @@
   .add-btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.6;fill:none;}
   .add-btn.stamped{animation:stampPress .4s ease;}
   .add-btn.in-cart{background:var(--gold);}
+  .add-btn:disabled{background:#c9c5bd;color:#8a8780;cursor:not-allowed;}
   @keyframes stampPress{
     0%{transform:scale(1);}
     40%{transform:scale(0.88);}
@@ -1258,8 +1264,9 @@
         <span class="price-old" id="pdOldPrice"></span>
       </div>
       <p class="pd-short" id="pdShort"></p>
+      <p class="stock-note" id="pdStockNote"></p>
 
-      <div class="qty-row">
+      <div class="qty-row" id="pdQtyRow">
         <span class="qty-label">כמות</span>
         <div class="qty-ctrl">
           <button onclick="changePdQty(1)" aria-label="הוספת יחידה">+</button>
@@ -1539,12 +1546,10 @@ async function loadCatalog(){
     id:p.id, cat:p.cat, catLabel:p.catLabel, name:p.name, price:p.price, oldPrice:p.oldPrice, badge:p.badge,
     short:p.short, desc:p.desc, material:p.material, dim:p.dim,
     images:PRODUCT_IMAGES[p.id] || [],
-    /* stock/status are carried through but not yet rendered anywhere on the
-       storefront — no existing UI/behavior reads them. They're here so the
-       admin → API → MongoDB → storefront flow is real today (open devtools
-       after an admin inventory update + reload and PRODUCTS[i].stock is the
-       new value), ready for a future "out of stock" UI to switch on them. */
-    stock:p.stock, status:p.status,
+    /* Real inventory: stock/threshold/status come straight from MongoDB via
+       the API and drive the out-of-stock/low-stock UI below — see
+       stockBadgeHtml/stockNoteHtml, quickAdd, openProduct, cartQty. */
+    stock:p.stock, threshold:p.threshold, status:p.status,
   })));
 }
 
@@ -1602,14 +1607,28 @@ function badgeHtml(badge){
   }
   return `<span class="badge sale"><span class="stamp"><svg viewBox="0 0 24 24"><path d="M4 12l6 6L20 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>מבצע</span>`;
 }
+/* Real inventory (product.stock/threshold from MongoDB) drives these —
+   never a static/demo label. A sold-out item's corner badge always wins
+   over new/sale (advertising a sale on something unavailable is misleading). */
+function stockCornerBadgeHtml(p){
+  if(p.stock === 0) return `<span class="badge out">אזל מהמלאי</span>`;
+  return badgeHtml(p.badge);
+}
+function stockNoteHtml(p){
+  if(p.stock === 0) return '';
+  if(p.stock === 1) return `<p class="stock-note last">פריט אחרון</p>`;
+  if(p.threshold != null && p.stock <= p.threshold) return `<p class="stock-note low">פריטים אחרונים</p>`;
+  return '';
+}
 function cardHtml(p){
   const isFav = favorites.includes(p.id);
   const inCart = isInCart(p.id);
+  const outOfStock = p.stock === 0;
   return `
   <div class="card">
     <div class="card-media" onclick="openProduct(${p.id})">
       <img src="${p.images[0]}" alt="${escAttr(p.name)}" loading="lazy">
-      ${badgeHtml(p.badge)}
+      ${stockCornerBadgeHtml(p)}
       <button class="card-fav ${isFav?'active':''}" onclick="event.stopPropagation();toggleFav(${p.id}, this)" aria-label="הוספה למועדפים">
         <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 5c-2.3 4.5-9.3 9-9.3 9Z"/></svg>
       </button>
@@ -1618,13 +1637,14 @@ function cardHtml(p){
       <span class="card-cat">${p.catLabel}</span>
       <h3 class="card-name">${p.name}</h3>
       <p class="card-desc">${p.short}</p>
+      ${stockNoteHtml(p)}
       <div class="card-foot">
         <div class="card-price">
           <span class="price">${money(p.price)}</span>
           ${p.oldPrice?`<span class="price-old">${money(p.oldPrice)}</span>`:''}
         </div>
-        <button class="add-btn ${inCart?'in-cart':''}" data-pid="${p.id}" onclick="event.stopPropagation();quickAdd(${p.id}, this)" aria-label="${inCart?'נוסף לסל':'הוסף לסל'}">
-          ${inCart ? CHECK_ICON_SVG : BAG_ICON_SVG}
+        <button class="add-btn ${inCart?'in-cart':''}" data-pid="${p.id}" ${outOfStock?'disabled':`onclick="event.stopPropagation();quickAdd(${p.id}, this)"`} aria-label="${outOfStock?'אזל מהמלאי':(inCart?'נוסף לסל':'הוסף לסל')}">
+          ${inCart && !outOfStock ? CHECK_ICON_SVG : BAG_ICON_SVG}
         </button>
       </div>
     </div>
@@ -1670,17 +1690,25 @@ function syncAddButtons(id){
 function updatePdAddButtons(){
   if(!currentProduct) return;
   const inCart = isInCart(currentProduct.id);
+  const outOfStock = currentProduct.stock === 0;
   const checkIcon = '<svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M5 13l4 4L19 7"/></svg>';
   [document.getElementById('pdAddBtn'), document.getElementById('pdAddBtnDesktop')].forEach(btn => {
     if(!btn) return;
-    btn.classList.toggle('in-cart', inCart);
-    btn.innerHTML = inCart
-      ? `<span style="display:inline-flex;align-items:center;gap:8px;">${checkIcon}נוסף לסל</span>`
-      : 'הוסף לסל';
+    btn.disabled = outOfStock;
+    btn.classList.toggle('in-cart', inCart && !outOfStock);
+    if(outOfStock){
+      btn.innerHTML = 'אזל מהמלאי';
+    } else if(inCart){
+      btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px;">${checkIcon}נוסף לסל</span>`;
+    } else {
+      btn.innerHTML = 'הוסף לסל';
+    }
   });
 }
 function quickAdd(id, btn){
   if(isInCart(id)) return;
+  const p = findProduct(id);
+  if(!p || p.stock === 0){ showToast('המוצר אזל מהמלאי'); return; } // defense in depth — the button is already disabled
   addToCart(id, 1);
   btn.classList.remove('stamped'); void btn.offsetWidth; btn.classList.add('stamped');
   syncAddButtons(id);
@@ -1718,7 +1746,11 @@ function renderCart(){
   }
   const shipping = subtotal >= 500 ? 0 : 30;
   const shippingLabel = shipping === 0 ? 'משלוח עד הבית' : 'משלוח';
-  const rows = items.map(c => `
+  const rows = items.map(c => {
+    const shortage = c.product.stock === 0
+      ? 'המוצר אזל מהמלאי'
+      : (c.qty > c.product.stock ? `במלאי נותרו ${c.product.stock} יחידות בלבד — נא לעדכן את הכמות` : '');
+    return `
     <div class="cart-item">
       <img src="${c.product.images[0]}" alt="${escAttr(c.product.name)}" data-cart-lightbox="${c.product.id}">
       <div class="cart-item-body">
@@ -1732,10 +1764,12 @@ function renderCart(){
             <button onclick="cartQty(${c.id},-1)" aria-label="הפחתת יחידה">–</button>
           </div>
         </div>
+        ${shortage ? `<p class="stock-note last">${shortage}</p>` : ''}
         ${c.qty > 1 ? `<div class="cart-item-total">סה״כ: <strong>${money(c.product.price*c.qty)}</strong></div>` : ''}
         <button class="remove-btn" onclick="removeFromCart(${c.id})">הסרה מהסל</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   body.innerHTML = `
     <div class="cart-list">${rows}</div>
     <div class="cart-summary">
@@ -1757,6 +1791,14 @@ function renderCart(){
 function cartQty(id, delta){
   const it = cart.find(c=>c.id===id);
   if(!it) return;
+  if(delta > 0){
+    const p = findProduct(id);
+    const available = p ? p.stock : 0;
+    if(it.qty + delta > available){
+      showToast(available > 0 ? `במלאי נותרו ${available} יחידות בלבד` : 'המוצר אזל מהמלאי');
+      return;
+    }
+  }
   it.qty += delta;
   if(it.qty<=0) cart = cart.filter(c=>c.id!==id);
   saveCart(); renderCart(); syncAddButtons(id);
@@ -1781,6 +1823,22 @@ function openProduct(id){
   document.getElementById('pdMaterial').textContent = currentProduct.material;
   document.getElementById('pdDim').textContent = currentProduct.dim;
   document.getElementById('pdQty').textContent = '1';
+
+  const stockNoteEl = document.getElementById('pdStockNote');
+  stockNoteEl.className = 'stock-note';
+  if(currentProduct.stock === 0){
+    stockNoteEl.textContent = 'אזל מהמלאי';
+    stockNoteEl.classList.add('last');
+  } else if(currentProduct.stock === 1){
+    stockNoteEl.textContent = 'פריט אחרון';
+    stockNoteEl.classList.add('last');
+  } else if(currentProduct.threshold != null && currentProduct.stock <= currentProduct.threshold){
+    stockNoteEl.textContent = 'פריטים אחרונים';
+    stockNoteEl.classList.add('low');
+  } else {
+    stockNoteEl.textContent = '';
+  }
+  document.getElementById('pdQtyRow').style.display = currentProduct.stock === 0 ? 'none' : '';
 
   const isFav = favorites.includes(id);
   document.getElementById('pdFavBtn').querySelector('svg').style.fill = isFav ? 'var(--gold)' : 'none';
@@ -1812,7 +1870,7 @@ function openProduct(id){
 
   updatePdAddButtons();
   const handlePdAdd = () => {
-    if(isInCart(currentProduct.id)) return;
+    if(isInCart(currentProduct.id) || currentProduct.stock === 0) return; // defense in depth — button is already disabled
     addToCart(currentProduct.id, pdQtyVal);
     syncAddButtons(currentProduct.id);
     updatePdAddButtons();
@@ -1824,12 +1882,20 @@ function openProduct(id){
   openView('productView');
 }
 function changePdQty(delta){
-  pdQtyVal = Math.max(1, pdQtyVal + delta);
+  const max = currentProduct ? Math.max(1, currentProduct.stock) : 999;
+  const next = pdQtyVal + delta;
+  if(delta > 0 && next > max){ showToast(`במלאי נותרו ${max} יחידות בלבד`); return; }
+  pdQtyVal = Math.max(1, next);
   document.getElementById('pdQty').textContent = pdQtyVal;
 }
 
 /* ==================== CHECKOUT ==================== */
-function goToCheckout(){
+async function goToCheckout(){
+  // Refresh stock from the server before the customer fills in the whole
+  // form — catches items that sold out (online or in-store) since the page
+  // loaded, without waiting all the way until the final order submit.
+  await revalidateCartProducts();
+  renderCart();
   renderCheckoutSummary();
   openView('checkoutView');
 }
@@ -1837,15 +1903,20 @@ function renderCheckoutSummary(){
   const {items, subtotal} = cartTotals();
   const shipCost = Number(document.querySelector('input[name="ship"]:checked')?.value || 30);
   document.getElementById('checkoutSummary').innerHTML = `
-    ${items.map(c=>`
+    ${items.map(c=>{
+      const shortage = c.product.stock === 0
+        ? 'המוצר אזל מהמלאי — לא ניתן להשלים הזמנה זו'
+        : (c.qty > c.product.stock ? `במלאי נותרו ${c.product.stock} יחידות בלבד — נא לעדכן את הכמות בסל` : '');
+      return `
       <div class="checkout-item">
         <img src="${c.product.images[0]}" alt="${escAttr(c.product.name)}">
         <div class="checkout-item-info">
           <span class="checkout-item-name">${c.product.name}</span>
           <span class="checkout-item-qty">כמות: ${c.qty}</span>
+          ${shortage ? `<p class="stock-note last">${shortage}</p>` : ''}
         </div>
         <span class="checkout-item-price">${money(c.product.price*c.qty)}</span>
-      </div>`).join('')}
+      </div>`;}).join('')}
     <div class="summary-row"><span>משלוח</span><span>${money(shipCost)}</span></div>
     <div class="summary-row total"><span>סה״כ לתשלום</span><span>${money(subtotal+shipCost)}</span></div>
   `;
@@ -1876,6 +1947,29 @@ function buildCheckoutPayload(){
   };
 }
 
+/* Re-reads the current stock/price/status for everything in the cart from
+   the API and updates the in-memory PRODUCTS entries in place. Used after
+   a failed checkout (e.g. stock ran out between page load and now) so the
+   customer immediately SEES which item is affected instead of just a
+   toast — the item is never silently removed from their cart. */
+async function revalidateCartProducts(){
+  const ids = [...new Set(cart.map(c => c.id))];
+  await Promise.all(ids.map(async id => {
+    try{
+      const fresh = await BereshitData.getProduct(id);
+      const local = findProduct(id);
+      if(local){
+        local.stock = fresh.stock;
+        local.threshold = fresh.threshold;
+        local.status = fresh.status;
+        local.price = fresh.price;
+        local.oldPrice = fresh.oldPrice;
+        local.badge = fresh.badge;
+      }
+    }catch(e){ /* product may have been removed entirely — leave local data, checkout will just fail again with a clear message */ }
+  }));
+}
+
 document.getElementById('placeOrderBtn').addEventListener('click', async () => {
   const form = document.getElementById('checkoutForm');
   if(!form.checkValidity()){ form.reportValidity(); return; }
@@ -1899,8 +1993,13 @@ document.getElementById('placeOrderBtn').addEventListener('click', async () => {
     document.getElementById('orderNumberDisplay').textContent = `מספר הזמנה: #${order.id}`;
     document.getElementById('confirmOverlay').classList.add('active');
   }catch(err){
-    // cart is left completely intact so the customer can fix the issue and retry
+    // cart is left completely intact so the customer can fix the issue and retry —
+    // but we DO refresh our knowledge of current stock so they immediately see
+    // which item became unavailable, instead of just a toast and a dead end.
     showToast(err.message || 'אירעה שגיאה בביצוע ההזמנה. נסו שוב.');
+    await revalidateCartProducts();
+    renderCart();
+    renderCheckoutSummary();
   }finally{
     btn.disabled = false;
     btn.style.opacity = '';

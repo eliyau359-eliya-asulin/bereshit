@@ -68,8 +68,9 @@
     getProduct(id){ return request(`/products/${id}`); },
     createProduct(data){ return request('/products', { method:'POST', body: JSON.stringify(data) }); },
     updateProduct(id, patch){ return request(`/products/${id}`, { method:'PUT', body: JSON.stringify(patch) }); },
-    /** Convenience wrapper — the backend keeps `status` consistent with `stock`. */
-    updateInventory(id, newStock){ return this.updateProduct(id, { stock: newStock }); },
+    /** Convenience wrapper — the backend keeps `status` consistent with `stock` and
+     * records a real inventory_log entry (reason optional; defaults server-side). */
+    updateInventory(id, newStock, reason){ return this.updateProduct(id, { stock: newStock, reason }); },
     deleteProduct(id){ return request(`/products/${id}`, { method:'DELETE' }); },
 
     /* ---------------- Categories ---------------- */

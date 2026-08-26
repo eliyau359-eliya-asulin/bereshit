@@ -576,6 +576,40 @@
   </div>
 </div>
 
+<!-- ===================== Inventory Adjustment Modal ===================== -->
+<div class="modal-overlay" id="inventoryModal">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-label="עדכון מלאי">
+    <div class="modal-head">
+      <div><h3>עדכון מלאי</h3><div class="sub" id="inventoryModalSub"></div></div>
+      <button class="modal-close" data-close-modal="inventoryModal" aria-label="סגירה"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field"><label>מלאי נוכחי</label><input class="field-input" id="ivCurrentStock" disabled></div>
+        <div class="form-field">
+          <label>מלאי חדש *</label>
+          <input class="field-input" id="ivNewStock" type="number" min="0" step="1">
+          <span class="field-error" id="ivNewStockError"></span>
+        </div>
+        <div class="form-field full">
+          <label>סיבת העדכון <span class="hint">(אופציונלי)</span></label>
+          <select class="field-select" id="ivReason">
+            <option value="">בחר סיבה...</option>
+            <option value="מכירה בחנות הפיזית">מכירה בחנות הפיזית</option>
+            <option value="קבלת מלאי חדש">קבלת מלאי חדש</option>
+            <option value="תיקון מלאי">תיקון מלאי</option>
+            <option value="אחר">אחר</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" data-close-modal="inventoryModal">ביטול</button>
+      <button class="btn btn-primary" id="saveInventoryBtn">שמירת מלאי</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== Category Modal ===================== -->
 <div class="modal-overlay" id="categoryModal">
   <div class="modal-box" role="dialog" aria-modal="true" aria-label="הוספה ועריכת קטגוריה">

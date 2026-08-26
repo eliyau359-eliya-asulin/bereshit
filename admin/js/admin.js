@@ -809,35 +809,49 @@
         }).join('')}</tbody>
       </table></div>
     `;
-    $$('[data-adjust]').forEach(b=> b.addEventListener('click', ()=>{
-      const p = PRODUCTS.find(x=>x.id===b.dataset.adjust);
-      openConfirm({
-        title:'עדכון מלאי',
-        desc:`${p.name}\nמלאי נוכחי: ${p.stock} יחידות.`,
-        confirmLabel:'עדכן מלאי',
-        input:{ label:'כמות במלאי חדשה', value:p.stock, min:0 },
-        onConfirm: async (newStock)=>{
-          if(!Number.isFinite(newStock) || newStock<0 || !Number.isInteger(newStock)){
-            toast('כמות לא תקינה — יש להזין מספר שלם 0 ומעלה');
-            return;
-          }
-          try{
-            const updated = await BereshitData.updateInventory(p.sharedId, newStock);
-            p.stock = updated.stock;
-            p.status = updated.status;
-            renderKPIs(); renderLowStock(); renderInventory(); renderProducts();
-            $('#lowStockBadge').textContent = PRODUCTS.filter(x=>x.stock<=x.threshold).length;
-            toast('המלאי עודכן ונשמר ב-MongoDB');
-          }catch(err){
-            toast('עדכון המלאי נכשל: ' + err.message);
-          }
-        }
-      });
-    }));
+    $$('[data-adjust]').forEach(b=> b.addEventListener('click', ()=> openInventoryModal(b.dataset.adjust)));
   }
   function initInventoryPage(){
     $('#inventorySearch').addEventListener('input', renderInventory);
     $('#inventoryStatusFilter').addEventListener('change', renderInventory);
+  }
+
+  const INVENTORY_FIELD_IDS = ['ivNewStock'];
+  function openInventoryModal(id){
+    const p = PRODUCTS.find(x=>x.id===id);
+    if(!p) return;
+    clearFieldErrors(INVENTORY_FIELD_IDS);
+    $('#inventoryModalSub').textContent = `${p.name} · מק"ט ${p.sku}`;
+    $('#ivCurrentStock').value = p.stock;
+    $('#ivNewStock').value = p.stock;
+    $('#ivReason').value = '';
+    openModal('#inventoryModal');
+
+    $('#saveInventoryBtn').onclick = async ()=>{
+      clearFieldErrors(INVENTORY_FIELD_IDS);
+      const newStock = Number($('#ivNewStock').value);
+      if(!Number.isInteger(newStock) || newStock < 0){
+        setFieldError('ivNewStock', 'יש להזין מספר שלם 0 ומעלה');
+        return;
+      }
+      if(newStock === p.stock){
+        closeModal('#inventoryModal');
+        return; // no real change — nothing to save or log
+      }
+      try{
+        await withBusy($('#saveInventoryBtn'), 'שומר...', async ()=>{
+          const updated = await BereshitData.updateInventory(p.sharedId, newStock, $('#ivReason').value || undefined);
+          p.stock = updated.stock;
+          p.status = updated.status;
+        });
+        closeModal('#inventoryModal');
+        renderKPIs(); renderLowStock(); renderInventory(); renderProducts(); renderCategories();
+        $('#lowStockBadge').textContent = PRODUCTS.filter(x=>x.stock<=x.threshold).length;
+        toast('המלאי עודכן ונשמר ב-MongoDB');
+      }catch(err){
+        toast('עדכון המלאי נכשל: ' + err.message);
+      }
+    };
   }
 
   /* ================= Promotions page ================= */

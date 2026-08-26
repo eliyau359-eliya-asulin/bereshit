@@ -55,6 +55,9 @@ def create_indexes(db):
     db.promotions.create_index([("code", ASCENDING)], unique=True)
     db.promotions.create_index([("status", ASCENDING)])
 
+    db.inventory_log.create_index([("productId", ASCENDING)])
+    db.inventory_log.create_index([("at", ASCENDING)])
+
 
 def bootstrap_counters(db):
     """Idempotent. The atomic id counters used to mint new order/customer

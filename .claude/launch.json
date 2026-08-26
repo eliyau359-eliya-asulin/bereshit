@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8123"],
       "port": 8123
+    },
+    {
+      "name": "flask-api",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "backend.app"],
+      "port": 5000
     }
   ]
 }

@@ -48,6 +48,12 @@ def run():
     bootstrap_counters(db)
     print("  counters: reset")
 
+    # Inventory log entries are tied to specific stock changes on the seeded
+    # products; once those products are wiped and reinserted above, old log
+    # rows no longer describe anything real, so they're cleared too.
+    db.inventory_log.delete_many({})
+    print("  inventory_log: cleared")
+
     create_indexes(db)
     print("Indexes created.")
     print("Seed complete.")

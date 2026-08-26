@@ -168,105 +168,125 @@ def create_order(payload):
         clean["customer"]["name"], clean["customer"]["email"], clean["customer"]["phone"]
     )
 
-    with client.start_session() as session:
-        with session.start_transaction():
-            line_items = []
-            subtotal = 0
+    # Result is captured here because with_transaction's callback (below)
+    # may run more than once (see docstring on the with_transaction call).
+    result_holder = {}
 
-            for item in clean["items"]:
-                pid, qty = item["productId"], item["qty"]
-                product = db.products.find_one({"_id": pid}, session=session)
-                if not product:
-                    raise ValidationError(f"מוצר עם מזהה {pid} אינו קיים")
-                if product.get("status") == "draft":
-                    raise ValidationError(f"המוצר '{product['name']}' אינו זמין לרכישה כרגע")
-                current_stock = product.get("stock", 0)
-                if current_stock < qty:
-                    raise ValidationError(
-                        f"המוצר '{product['name']}' אינו זמין במלאי בכמות המבוקשת. "
-                        f"המלאי הזמין הוא {current_stock}."
-                    )
+    def _run(session):
+        line_items = []
+        subtotal = 0
 
-                # Atomic, condition-guarded decrement: the {"stock": {"$gte": qty}}
-                # filter means this only succeeds if the stock is still
-                # sufficient AT THE MOMENT OF THE WRITE, closing the race
-                # window between the check above and this update. The
-                # pipeline form lets `status` flip to "out" based on the
-                # POST-decrement stock in the same atomic operation.
-                updated = db.products.find_one_and_update(
-                    {"_id": pid, "stock": {"$gte": qty}},
-                    [
-                        {"$set": {
-                            "stock": {"$subtract": ["$stock", qty]},
-                            "sold": {"$add": [{"$ifNull": ["$sold", 0]}, qty]},
-                        }},
-                        {"$set": {
-                            "status": {"$cond": [{"$lte": ["$stock", 0]}, "out", "$status"]},
-                        }},
-                    ],
-                    session=session,
-                    return_document=ReturnDocument.AFTER,
+        for item in clean["items"]:
+            pid, qty = item["productId"], item["qty"]
+            product = db.products.find_one({"_id": pid}, session=session)
+            if not product:
+                raise ValidationError(f"מוצר עם מזהה {pid} אינו קיים")
+            if product.get("status") == "draft":
+                raise ValidationError(f"המוצר '{product['name']}' אינו זמין לרכישה כרגע")
+            current_stock = product.get("stock", 0)
+            if current_stock < qty:
+                raise ValidationError(
+                    f"המוצר '{product['name']}' אינו זמין במלאי בכמות המבוקשת. "
+                    f"המלאי הזמין הוא {current_stock}."
                 )
-                if not updated:
-                    # A concurrent order consumed the remaining stock between
-                    # the read above and this write — abort cleanly.
-                    raise ValidationError(
-                        f"המוצר '{product['name']}' אינו זמין במלאי בכמות המבוקשת כרגע"
-                    )
 
-                line_total = product["price"] * qty
-                subtotal += line_total
-                line_items.append({
-                    "productId": pid,
-                    "name": product["name"],
-                    "sku": product.get("sku", ""),
-                    "cat": product.get("catLabel", ""),
-                    "price": product["price"],
-                    "qty": qty,
-                    "lineTotal": line_total,
-                })
-
-            store_info = db.store_info.find_one({"_id": "store_info"}, session=session) or {}
-            ship_cost = store_info.get("shippingCost", 0)
-            free_threshold = store_info.get("freeShippingThreshold")
-            shipping_cost = 0 if (free_threshold is not None and subtotal >= free_threshold) else ship_cost
-            grand_total = subtotal + shipping_cost
-
-            order_id = f"BJ-{next_sequence(db, 'order_id', session=session)}"
-            today = date.today().isoformat()
-
-            order_doc = {
-                "_id": order_id,
-                "customerId": customer["_id"],
-                "customer": {
-                    "id": customer["_id"],
-                    "name": clean["customer"]["name"],
-                    "email": clean["customer"]["email"].lower(),
-                    "phone": clean["customer"]["phone"],
-                },
-                "date": today,
-                "items": line_items,
-                "total": subtotal,          # historical convention: "total" = items subtotal (see shared/models.js)
-                "shippingCost": shipping_cost,
-                "grandTotal": grand_total,
-                "status": _INITIAL_ORDER_STATUS,
-                "pay": _PENDING_PAYMENT,
-                "shipping": clean["shipping"],
-                "payment": {"method": clean["payment"]["method"], "date": today},
-            }
-            db.orders.insert_one(order_doc, session=session)
-
-            db.customers.update_one(
-                {"_id": customer["_id"]},
-                {"$inc": {"orders": 1, "spent": subtotal}},
+            # Atomic, condition-guarded decrement: the {"stock": {"$gte": qty}}
+            # filter means this only succeeds if the stock is still
+            # sufficient AT THE MOMENT OF THE WRITE, closing the race
+            # window between the check above and this update. The
+            # pipeline form lets `status` flip to "out" based on the
+            # POST-decrement stock in the same atomic operation.
+            updated = db.products.find_one_and_update(
+                {"_id": pid, "stock": {"$gte": qty}},
+                [
+                    {"$set": {
+                        "stock": {"$subtract": ["$stock", qty]},
+                        "sold": {"$add": [{"$ifNull": ["$sold", 0]}, qty]},
+                    }},
+                    {"$set": {
+                        "status": {"$cond": [{"$lte": ["$stock", 0]}, "out", "$status"]},
+                    }},
+                ],
                 session=session,
+                return_document=ReturnDocument.AFTER,
             )
+            if not updated:
+                # A concurrent order consumed the remaining stock between
+                # the read above and this write — abort cleanly.
+                raise ValidationError(
+                    f"המוצר '{product['name']}' אינו זמין במלאי בכמות המבוקשת כרגע"
+                )
 
-    return {
-        "id": order_id,
-        "customerId": customer["_id"],
-        "subtotal": subtotal,
-        "shipping": shipping_cost,
-        "total": grand_total,
-        "status": _INITIAL_ORDER_STATUS,
-    }
+            line_total = product["price"] * qty
+            subtotal += line_total
+            line_items.append({
+                "productId": pid,
+                "name": product["name"],
+                "sku": product.get("sku", ""),
+                "cat": product.get("catLabel", ""),
+                "price": product["price"],
+                "qty": qty,
+                "lineTotal": line_total,
+            })
+
+        store_info = db.store_info.find_one({"_id": "store_info"}, session=session) or {}
+        ship_cost = store_info.get("shippingCost", 0)
+        free_threshold = store_info.get("freeShippingThreshold")
+        shipping_cost = 0 if (free_threshold is not None and subtotal >= free_threshold) else ship_cost
+        grand_total = subtotal + shipping_cost
+
+        order_id = f"BJ-{next_sequence(db, 'order_id', session=session)}"
+        today = date.today().isoformat()
+
+        order_doc = {
+            "_id": order_id,
+            "customerId": customer["_id"],
+            "customer": {
+                "id": customer["_id"],
+                "name": clean["customer"]["name"],
+                "email": clean["customer"]["email"].lower(),
+                "phone": clean["customer"]["phone"],
+            },
+            "date": today,
+            "items": line_items,
+            "total": subtotal,          # historical convention: "total" = items subtotal (see shared/models.js)
+            "shippingCost": shipping_cost,
+            "grandTotal": grand_total,
+            "status": _INITIAL_ORDER_STATUS,
+            "pay": _PENDING_PAYMENT,
+            "shipping": clean["shipping"],
+            "payment": {"method": clean["payment"]["method"], "date": today},
+        }
+        db.orders.insert_one(order_doc, session=session)
+
+        db.customers.update_one(
+            {"_id": customer["_id"]},
+            {"$inc": {"orders": 1, "spent": subtotal}},
+            session=session,
+        )
+
+        result_holder["order"] = {
+            "id": order_id,
+            "customerId": customer["_id"],
+            "subtotal": subtotal,
+            "shipping": shipping_cost,
+            "total": grand_total,
+            "status": _INITIAL_ORDER_STATUS,
+        }
+
+    with client.start_session() as session:
+        # with_transaction (rather than a bare start_transaction block) is
+        # MongoDB's documented safe pattern for handling transient errors —
+        # e.g. a write conflict when two customers race for the same
+        # product's last unit. It automatically retries the whole callback
+        # on a transient transaction error, and retries just the commit on
+        # an ambiguous commit result, until it definitively succeeds or
+        # fails. `_run` is idempotent to retry: every write it makes is
+        # inside the same transaction, so an aborted attempt leaves nothing
+        # behind (including the order-id counter increment) before the
+        # next attempt reads fresh data. A genuine ValidationError (e.g.
+        # insufficient stock) has no transient-error label, so it is not
+        # retried — it propagates immediately as the real, final answer.
+        session.with_transaction(_run)
+
+    return result_holder["order"]
