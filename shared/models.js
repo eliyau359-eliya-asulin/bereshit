@@ -60,10 +60,12 @@
 /**
  * @typedef {Object} OrderLineItem
  * @property {number} productId
- * @property {string} name
+ * @property {string} name              Snapshot at order time — never re-read from the live product later.
+ * @property {string} sku               Snapshot at order time.
  * @property {string} cat
- * @property {number} price             Unit price at time of order.
+ * @property {number} price             Unit price at time of order (snapshot, ignores later price changes).
  * @property {number} qty
+ * @property {number} lineTotal         price * qty, computed server-side.
  */
 
 /**
@@ -72,11 +74,31 @@
  * @property {string} customerId        References Customer.id.
  * @property {string} date              ISO date string (YYYY-MM-DD).
  * @property {OrderLineItem[]} items
- * @property {number} total
- * @property {('ממתין לאישור'|'בטיפול'|'נשלח'|'נמסר'|'בוטל')} status
- * @property {('שולם'|'ממתין לתשלום'|'נכשל')} pay
- * @property {{address:string, city:string, zip:string, method:string}} shipping
+ * @property {number} total             Items subtotal (historical field name — does NOT include shipping).
+ * @property {number} shippingCost      Shipping charged at order time, computed server-side from StoreInfo
+ *                                       (shippingCost/freeShippingThreshold) — a snapshot, so it stays correct
+ *                                       even if store settings change later.
+ * @property {number} grandTotal        total + shippingCost.
+ * @property {('ממתין לאישור'|'בטיפול'|'נשלח'|'נמסר'|'בוטל')} status  New orders always start at 'ממתין לאישור'.
+ * @property {('שולם'|'ממתין לתשלום'|'נכשל')} pay     New orders always start 'ממתין לתשלום' — no payment
+ *                                                     processing exists yet (Phase 1: real order pipeline only).
+ * @property {{address:string, city:string, zip:string, method:string, notes:string}} shipping
+ *           Contact/address snapshot at order time — a customer's address changing later must not
+ *           change how an old order displays.
  * @property {{method:string, date:string}} payment
+ */
+
+/**
+ * POST /api/orders request body (see BereshitData.createOrder):
+ * @typedef {Object} CheckoutPayload
+ * @property {{name:string, email:string, phone:string}} customer
+ * @property {{method?:string, address:string, city:string, zip?:string, notes?:string}} shipping
+ * @property {{productId:number, qty:number}[]} items   Only id+qty are trusted — price/name/etc
+ *                                                       are always read fresh from MongoDB server-side.
+ * @property {{method:string}} payment                  Recorded as-is; no processing happens in Phase 1.
+ *
+ * Response: { order: { id, customerId, subtotal, shipping, total, status } } — `shipping` here is the
+ * numeric cost (not the address object above), and `total` is the grand total (subtotal + shipping).
  */
 
 /**

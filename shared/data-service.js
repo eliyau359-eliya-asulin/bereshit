@@ -89,6 +89,10 @@
     },
     getOrder(id){ return request(`/orders/${id}`); },
     updateOrderStatus(id, status){ return request(`/orders/${id}`, { method:'PUT', body: JSON.stringify({ status }) }); },
+    /** Real checkout: server validates stock, computes price/shipping, decrements inventory,
+     * and creates the order — see backend/services/orders_service.py:create_order.
+     * Resolves with { order: { id, customerId, subtotal, shipping, total, status } }. */
+    createOrder(data){ return request('/orders', { method:'POST', body: JSON.stringify(data) }); },
 
     /* ---------------- Customers ---------------- */
     getCustomers(){ return request('/customers'); },

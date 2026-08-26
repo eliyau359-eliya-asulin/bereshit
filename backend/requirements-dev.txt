@@ -1,0 +1,4 @@
+# Test-only dependency — not needed to run the app, so kept out of
+# requirements.txt (root, used by Vercel) and backend/requirements.txt.
+# Install with: pip install -r backend/requirements-dev.txt
+pytest==9.1.1

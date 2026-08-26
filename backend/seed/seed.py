@@ -7,7 +7,7 @@ Usage (from the BERESHIT project root):
     python -m backend.seed.seed
 """
 from backend.config import Config
-from backend.db.mongo import get_db, create_indexes, ping
+from backend.db.mongo import get_db, create_indexes, bootstrap_counters, ping
 from backend.seed.seed_data import PRODUCTS, CATEGORIES, CUSTOMERS, ORDERS, PROMOTIONS, STORE_INFO
 
 
@@ -40,6 +40,13 @@ def run():
     db.store_info.delete_many({})
     db.store_info.insert_one(_with_mongo_id(STORE_INFO))
     print("  store_info: seeded 1 document")
+
+    # Reset the order/customer id counters so they restart right above the
+    # seed data above, rather than keeping whatever a previous test run
+    # (real checkouts, admin-created customers, etc.) had advanced them to.
+    db.counters.delete_many({})
+    bootstrap_counters(db)
+    print("  counters: reset")
 
     create_indexes(db)
     print("Indexes created.")

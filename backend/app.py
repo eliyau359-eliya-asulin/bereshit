@@ -10,7 +10,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 
 from backend.config import Config
-from backend.db.mongo import get_db, create_indexes, ping
+from backend.db.mongo import get_db, create_indexes, bootstrap_counters, ping
 from backend.routes.products import bp as products_bp
 from backend.routes.categories import bp as categories_bp
 from backend.routes.orders import bp as orders_bp
@@ -53,9 +53,11 @@ def create_app():
         return jsonify({"error": "Internal server error"}), 500
 
     try:
-        create_indexes(get_db())
+        db = get_db()
+        create_indexes(db)
+        bootstrap_counters(db)
     except Exception as e:
-        app.logger.warning("Could not create indexes at startup (will retry on next request): %s", e)
+        app.logger.warning("Could not initialize indexes/counters at startup (will retry on next request): %s", e)
 
     return app
 

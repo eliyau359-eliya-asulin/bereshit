@@ -2,7 +2,7 @@
 PyMongo connection singleton. Every collection accessor in services/ goes
 through get_db() — this is the one place that knows how to reach MongoDB.
 """
-from pymongo import MongoClient, ASCENDING
+from pymongo import MongoClient, ASCENDING, ReturnDocument
 from pymongo.errors import ConfigurationError
 
 from backend.config import Config
@@ -54,3 +54,47 @@ def create_indexes(db):
 
     db.promotions.create_index([("code", ASCENDING)], unique=True)
     db.promotions.create_index([("status", ASCENDING)])
+
+
+def bootstrap_counters(db):
+    """Idempotent. The atomic id counters used to mint new order/customer
+    ids (see next_sequence) must start above whatever the seed data
+    already used, so a real new order/customer can never collide with a
+    seeded one. Only touches a counter that doesn't exist yet — safe to
+    call on every app startup."""
+    if not db.counters.find_one({"_id": "order_id"}):
+        max_num = 10233  # one below the first seeded order, BJ-10234
+        for o in db.orders.find({}, {"_id": 1}):
+            oid = o["_id"]
+            if isinstance(oid, str) and oid.startswith("BJ-"):
+                try:
+                    max_num = max(max_num, int(oid.split("-", 1)[1]))
+                except ValueError:
+                    pass
+        db.counters.update_one({"_id": "order_id"}, {"$setOnInsert": {"seq": max_num}}, upsert=True)
+
+    if not db.counters.find_one({"_id": "customer_id"}):
+        max_num = 200  # one below the first seeded customer, CU-201
+        for c in db.customers.find({}, {"_id": 1}):
+            cid = c["_id"]
+            if isinstance(cid, str) and cid.startswith("CU-"):
+                try:
+                    max_num = max(max_num, int(cid.split("-", 1)[1]))
+                except ValueError:
+                    pass
+        db.counters.update_one({"_id": "customer_id"}, {"$setOnInsert": {"seq": max_num}}, upsert=True)
+
+
+def next_sequence(db, name, session=None):
+    """Atomically returns the next integer in a named sequence (e.g.
+    'order_id', 'customer_id'). Safe under concurrency — MongoDB's $inc
+    on a single document is atomic, so two simultaneous callers always
+    get two different numbers, never the same one."""
+    doc = db.counters.find_one_and_update(
+        {"_id": name},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+        session=session,
+    )
+    return doc["seq"]

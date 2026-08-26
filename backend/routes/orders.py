@@ -16,6 +16,20 @@ def list_orders():
         return jsonify({"error": "Database error while listing orders"}), 500
 
 
+@bp.post("")
+def create_order():
+    data = request.get_json(silent=True)
+    if data is None:
+        return jsonify({"error": "Request body must be valid JSON"}), 400
+    try:
+        order = svc.create_order(data)
+        return jsonify({"order": order}), 201
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
+    except PyMongoError:
+        return jsonify({"error": "שגיאת שרת בעת יצירת ההזמנה. נסו שוב."}), 500
+
+
 @bp.get("/<order_id>")
 def get_order(order_id):
     try:
