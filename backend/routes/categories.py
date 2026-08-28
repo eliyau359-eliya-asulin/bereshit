@@ -3,6 +3,7 @@ from pymongo.errors import PyMongoError
 
 from backend.models.schemas import ValidationError
 from backend.services import categories_service as svc
+from backend.auth.decorators import require_admin
 
 bp = Blueprint("categories", __name__, url_prefix="/api/categories")
 
@@ -27,6 +28,7 @@ def get_category(key):
 
 
 @bp.post("")
+@require_admin("categories:write")
 def create_category():
     data = request.get_json(silent=True)
     if data is None:
@@ -41,6 +43,7 @@ def create_category():
 
 
 @bp.put("/<key>")
+@require_admin("categories:write")
 def update_category(key):
     data = request.get_json(silent=True)
     if data is None:
@@ -57,6 +60,7 @@ def update_category(key):
 
 
 @bp.delete("/<key>")
+@require_admin("categories:write")
 def delete_category(key):
     try:
         result = svc.delete_category(key)

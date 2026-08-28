@@ -3,6 +3,7 @@ from pymongo.errors import PyMongoError
 
 from backend.models.schemas import ValidationError
 from backend.services import promotions_service as svc
+from backend.auth.decorators import require_admin
 
 bp = Blueprint("promotions", __name__, url_prefix="/api/promotions")
 
@@ -27,6 +28,7 @@ def get_promotion(promo_id):
 
 
 @bp.post("")
+@require_admin("promotions:write")
 def create_promotion():
     data = request.get_json(silent=True)
     if data is None:
@@ -41,6 +43,7 @@ def create_promotion():
 
 
 @bp.put("/<promo_id>")
+@require_admin("promotions:write")
 def update_promotion(promo_id):
     data = request.get_json(silent=True)
     if data is None:

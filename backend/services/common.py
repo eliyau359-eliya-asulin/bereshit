@@ -14,3 +14,15 @@ def serialize(doc):
 
 def serialize_many(docs):
     return [serialize(d) for d in docs]
+
+
+def paginate(cursor, count_query_fn, page, page_size):
+    """Applied only when the caller explicitly asks for a page (keeps every
+    existing list endpoint returning a bare array by default — no response
+    shape change for callers that don't opt in). `count_query_fn` is a
+    zero-arg callable returning the total matching document count."""
+    page = max(1, page)
+    page_size = max(1, min(page_size, 200))
+    total = count_query_fn()
+    docs = cursor.skip((page - 1) * page_size).limit(page_size)
+    return {"items": serialize_many(docs), "total": total, "page": page, "pageSize": page_size}

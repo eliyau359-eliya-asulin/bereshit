@@ -4,6 +4,8 @@ already built against) — this is the same data model, just enforced here
 before anything is written to MongoDB.
 """
 
+from backend.auth.roles import ADMIN_ROLES  # noqa: F401  (re-exported for callers that validate a role string)
+
 NUMBER = (int, float)
 
 
@@ -38,6 +40,7 @@ def validate_fields(data, spec, partial=False):
 
 PRODUCT_SPEC = {
     "sku": (str, True),
+    "barcode": (str, False),  # standard product barcode (EAN/UPC) — used by the admin barcode scanner to look up a product
     "cat": (str, True),
     "catLabel": (str, True),
     "name": (str, True),
@@ -53,6 +56,7 @@ PRODUCT_SPEC = {
     "status": (str, False),
     "sold": (int, False),
     "image": (str, False),  # URL/path to a hosted product photo; None = use the UI's placeholder
+    "thumbnail": (str, False),  # small resized variant of `image` from the upload pipeline; tracked so it can be cleaned up on replace/delete
 }
 
 # Valid forward workflow. Cancellation ("בוטל") is allowed from either of
@@ -92,4 +96,39 @@ STORE_INFO_SPEC = {
     "shippingCost": (NUMBER, False),
     "freeShippingThreshold": (NUMBER, False),
     "paymentMethods": (list, False),
+}
+
+CUSTOMER_REGISTER_SPEC = {
+    "name": (str, True),
+    "email": (str, True),
+    "phone": (str, True),
+    "password": (str, True),
+}
+
+CUSTOMER_LOGIN_SPEC = {
+    "email": (str, True),
+    "password": (str, True),
+}
+
+CUSTOMER_PROFILE_UPDATE_SPEC = {
+    "name": (str, False),
+    "phone": (str, False),
+}
+
+ADMIN_USER_CREATE_SPEC = {
+    "name": (str, True),
+    "email": (str, True),
+    "password": (str, True),
+    "role": (str, True),
+}
+
+ADMIN_USER_UPDATE_SPEC = {
+    "name": (str, False),
+    "role": (str, False),
+    "active": (bool, False),
+}
+
+ADMIN_LOGIN_SPEC = {
+    "email": (str, True),
+    "password": (str, True),
 }

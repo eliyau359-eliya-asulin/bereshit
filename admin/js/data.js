@@ -51,6 +51,7 @@ async function loadAdminData(){
     status: p.status,
     sold: p.sold,
     image: p.image || null,
+    thumbnail: p.thumbnail || null,
   })));
 
   CATEGORIES.push(...sharedCategories.map(c=>({
@@ -174,5 +175,39 @@ function computeNewCustomersThisMonth(){
   }).length;
 }
 
-/* ---------- Admin user (mock — no auth system exists yet) ---------- */
-const ADMIN_USER = { name:'ליאת אשכול', role:'מנהלת חנות', initials:'ל.א' };
+/* ---------- Current admin (real session, set by boot() after login) ---------- */
+const ADMIN_USER = { id:null, name:'', role:'', roleLabel:'', initials:'' };
+const ADMIN_USERS = [];
+
+const ROLE_LABELS_HE = {
+  super_admin: 'מנהל-על',
+  admin: 'מנהל',
+  inventory_manager: 'מנהל מלאי',
+  orders_manager: 'מנהל הזמנות',
+  content_manager: 'מנהל תוכן',
+};
+
+function initialsOf(name){
+  const parts = (name || '').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return '?';
+  return parts.slice(0,2).map(p=>p[0]).join('').toUpperCase();
+}
+
+function setCurrentAdmin(admin){
+  ADMIN_USER.id = admin.id;
+  ADMIN_USER.name = admin.name;
+  ADMIN_USER.role = admin.role;
+  ADMIN_USER.roleLabel = admin.roleLabel || admin.role;
+  ADMIN_USER.initials = initialsOf(admin.name);
+}
+
+async function loadAdminUsersList(){
+  ADMIN_USERS.length = 0;
+  try{
+    const list = await BereshitData.listAdminUsers();
+    ADMIN_USERS.push(...list);
+  }catch(err){
+    // Non-super-admin roles get a 403 here — the Users tab simply stays
+    // empty for them rather than throwing, since it's a secondary panel.
+  }
+}

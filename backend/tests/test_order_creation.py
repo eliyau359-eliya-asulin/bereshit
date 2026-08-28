@@ -323,7 +323,7 @@ def test_multiple_products_line_totals_and_total_correct(client, db, cleanup):
 # ---------------------------------------------------------------------
 # TEST 10 — successful order -> Admin API can retrieve it
 # ---------------------------------------------------------------------
-def test_admin_can_retrieve_created_order(client, db, cleanup):
+def test_admin_can_retrieve_created_order(client, admin_client, db, cleanup):
     pid = TEST_PRODUCT_ID_START + 12
     make_product(db, pid, stock=10, price=90)
     cleanup.product_ids.append(pid)
@@ -336,14 +336,18 @@ def test_admin_can_retrieve_created_order(client, db, cleanup):
     order_id = res.get_json()["order"]["id"]
     cleanup.order_ids.append(order_id)
 
-    # Same endpoint the admin dashboard uses to list/read orders.
-    get_res = client.get(f"/api/orders/{order_id}")
+    # Same endpoint the admin dashboard uses to list/read orders — an
+    # unauthenticated request must be refused (Phase B: orders are private).
+    anon_res = client.get(f"/api/orders/{order_id}")
+    assert anon_res.status_code == 401
+
+    get_res = admin_client.get(f"/api/orders/{order_id}")
     assert get_res.status_code == 200
     fetched = get_res.get_json()
     assert fetched["id"] == order_id
     assert fetched["status"] == "ממתין לאישור"
     assert fetched["pay"] == "ממתין לתשלום"
 
-    list_res = client.get("/api/orders")
+    list_res = admin_client.get("/api/orders")
     assert list_res.status_code == 200
     assert any(o["id"] == order_id for o in list_res.get_json())

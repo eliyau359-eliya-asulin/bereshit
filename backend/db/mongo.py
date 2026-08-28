@@ -45,6 +45,9 @@ def create_indexes(db):
     db.products.create_index([("cat", ASCENDING)])
     db.products.create_index([("status", ASCENDING)])
     db.products.create_index([("sku", ASCENDING)], unique=True)
+    # sparse: most products won't have a barcode set, and those should never
+    # collide with each other on a "both null" false match.
+    db.products.create_index([("barcode", ASCENDING)], unique=True, sparse=True)
 
     db.orders.create_index([("customerId", ASCENDING)])
     db.orders.create_index([("status", ASCENDING)])
@@ -57,6 +60,16 @@ def create_indexes(db):
 
     db.inventory_log.create_index([("productId", ASCENDING)])
     db.inventory_log.create_index([("at", ASCENDING)])
+
+    db.admin_users.create_index([("email", ASCENDING)], unique=True)
+
+    # TTL index: MongoDB's background task removes a session document once
+    # its `expiresAt` is in the past (checked roughly once/minute) — sessions
+    # self-clean without any cron job or manual sweep.
+    db.sessions.create_index([("expiresAt", ASCENDING)], expireAfterSeconds=0)
+    db.sessions.create_index([("userType", ASCENDING), ("userId", ASCENDING)])
+
+    db.login_attempts.create_index([("expiresAt", ASCENDING)], expireAfterSeconds=0)
 
 
 def bootstrap_counters(db):
@@ -86,6 +99,35 @@ def bootstrap_counters(db):
                 except ValueError:
                     pass
         db.counters.update_one({"_id": "customer_id"}, {"$setOnInsert": {"seq": max_num}}, upsert=True)
+
+
+def bootstrap_admin(db):
+    """Idempotent: creates the first Super Admin account from
+    ADMIN_BOOTSTRAP_EMAIL/ADMIN_BOOTSTRAP_PASSWORD if backend.admin_users is
+    completely empty. Never overwrites or touches an existing admin account,
+    and never invents a credential — if the env vars aren't set, this is a
+    no-op and the deployment simply has no admin login until one is created
+    (see backend/seed/seed_admin.py for a one-off CLI alternative)."""
+    from backend.config import Config
+    from backend.auth.security import hash_password
+    from backend.auth.roles import SUPER_ADMIN
+    from datetime import datetime, timezone
+
+    if db.admin_users.count_documents({}) > 0:
+        return False
+    if not Config.ADMIN_BOOTSTRAP_EMAIL or not Config.ADMIN_BOOTSTRAP_PASSWORD:
+        return False
+
+    db.admin_users.insert_one({
+        "_id": "AU-1",
+        "name": Config.ADMIN_BOOTSTRAP_NAME,
+        "email": Config.ADMIN_BOOTSTRAP_EMAIL.strip().lower(),
+        "passwordHash": hash_password(Config.ADMIN_BOOTSTRAP_PASSWORD),
+        "role": SUPER_ADMIN,
+        "active": True,
+        "createdAt": datetime.now(timezone.utc),
+    })
+    return True
 
 
 def next_sequence(db, name, session=None):

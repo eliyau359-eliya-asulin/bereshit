@@ -427,6 +427,59 @@ table{border-collapse:collapse;width:100%;}
 .field-error{font-size:11px;color:var(--danger);font-weight:600;min-height:14px;display:block;}
 .field-input.invalid, .field-select.invalid{border-color:var(--danger);}
 .field-input.invalid:focus, .field-select.invalid:focus{box-shadow:0 0 0 3px var(--danger-tint);}
+/* Responsive tables: below 640px, a <table> reflows into a stack of
+   card-like rows instead of forcing horizontal scrolling. Each <td> must
+   carry data-label="..." (see admin.js) — the label is what ::before
+   renders in place of the (now hidden) column header. */
+@media (max-width:640px){
+  .table-scroll{overflow-x:visible;}
+  .data-table{min-width:0;width:100%;}
+  .data-table thead{display:none;}
+  .data-table tbody{display:block;}
+  .data-table tr{
+    display:block;border:1px solid var(--line);border-radius:var(--radius-m);
+    margin-bottom:10px;padding:4px 14px;background:var(--white);
+  }
+  .data-table td{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:9px 0;border-bottom:1px solid var(--line-soft);width:100%;
+  }
+  .data-table td:last-child{border-bottom:none;}
+  .data-table td::before{
+    content:attr(data-label);font-size:11px;font-weight:600;color:var(--ink-faint);flex-shrink:0;
+  }
+  .data-table td.cell-actions{justify-content:flex-start;gap:10px;}
+  .data-table td.cell-actions::before{content:none;}
+  .data-table td .cell-main{flex:1;min-width:0;justify-content:flex-end;}
+}
+
+/* Barcode scanner */
+.scanner-panel{padding:20px;}
+.scanner-manual-row{display:flex;gap:10px;margin-bottom:14px;}
+.scanner-manual-row .field-input{flex:1;font-size:16px;} /* 16px avoids iOS auto-zoom on focus */
+.scanner-camera-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.scanner-video-wrap{position:relative;max-width:480px;margin:0 auto 18px;border-radius:var(--radius-m);overflow:hidden;background:#000;}
+.scanner-video-wrap video{width:100%;display:block;aspect-ratio:4/3;object-fit:cover;}
+.scanner-video-wrap .btn{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);}
+.scan-result-card{border:1px solid var(--line);border-radius:var(--radius-m);padding:18px;max-width:480px;margin:0 auto;}
+.scan-result-head{display:flex;gap:14px;align-items:center;margin-bottom:16px;}
+.scan-result-head .thumb{width:56px;height:56px;flex-shrink:0;}
+.scan-result-stock{font-size:28px;font-weight:700;text-align:center;margin:10px 0;}
+.scan-adjust-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px;}
+.scan-adjust-row button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.scan-adjust-row button:active{background:var(--green-tint);}
+.scan-adjust-row .num{min-width:60px;text-align:center;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+.scan-error-card{border:1px solid var(--danger);background:var(--danger-tint);border-radius:var(--radius-m);padding:16px;max-width:480px;margin:0 auto;text-align:center;color:var(--danger);}
+
+.img-dropzone{
+  border:1.5px dashed var(--line);border-radius:var(--radius-m);padding:26px 16px;text-align:center;
+  cursor:pointer;transition:border-color .15s ease,background .15s ease;color:var(--ink-soft);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.img-dropzone:hover,.img-dropzone:focus-visible{border-color:var(--gold-soft);background:var(--ivory-deep);outline:none;}
+.img-dropzone.dragover{border-color:var(--green);background:var(--green-tint);color:var(--green);}
+.img-dropzone .icon{width:26px;height:26px;opacity:0.7;}
+.img-dropzone-text{font-size:13px;font-weight:600;color:var(--ink);}
 .img-preview-row{display:flex;align-items:center;gap:12px;margin-top:10px;}
 .img-preview-row .thumb{width:64px;height:64px;}
 .field-input, .field-select, .field-textarea{
@@ -614,3 +667,25 @@ table{border-collapse:collapse;width:100%;}
   .modal-body{padding:18px;}
   .modal-head,.modal-foot{padding:16px 18px;}
 }
+
+/* ================= Login gate ================= */
+.login-screen{
+  position:fixed;inset:0;background:var(--green);display:flex;align-items:center;justify-content:center;
+  z-index:500;padding:20px;
+}
+.login-box{
+  background:var(--ivory);border-radius:var(--radius-l);box-shadow:var(--shadow-pop);
+  width:100%;max-width:380px;padding:36px 30px;text-align:center;
+}
+.login-logo{width:56px;height:56px;object-fit:contain;margin:0 auto 14px;display:block;}
+.login-box h1{font-size:20px;margin-bottom:6px;}
+.login-sub{font-size:12.5px;color:var(--ink-faint);margin-bottom:22px;}
+.login-box .form-field{text-align:right;margin-bottom:14px;}
+.login-submit{width:100%;justify-content:center;margin-top:6px;}
+.login-box .field-error{display:block;min-height:16px;margin-bottom:4px;}
+
+.sidebar-logout-btn{
+  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--ink-faint);flex-shrink:0;transition:background .15s ease,color .15s ease;margin-inline-start:auto;
+}
+.sidebar-logout-btn:hover{background:var(--danger-tint);color:var(--danger);}

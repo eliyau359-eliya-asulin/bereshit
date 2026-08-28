@@ -8,7 +8,7 @@ from backend.models.schemas import (
     validate_fields, ORDER_UPDATE_SPEC, ValidationError,
     ORDER_STATUS_FLOW, ORDER_CANCELLABLE_FROM,
 )
-from backend.services.common import serialize, serialize_many
+from backend.services.common import serialize, serialize_many, paginate
 from backend.services.customers_service import find_or_create_customer
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -38,7 +38,7 @@ def _validate_transition(current_status, new_status):
         )
 
 
-def list_orders(filters=None):
+def list_orders(filters=None, page=None, page_size=None):
     db = get_db()
     query = {}
     if filters:
@@ -46,8 +46,10 @@ def list_orders(filters=None):
             query["status"] = filters["status"]
         if filters.get("customerId"):
             query["customerId"] = filters["customerId"]
-    docs = db.orders.find(query).sort("date", -1)
-    return serialize_many(docs)
+    cursor = db.orders.find(query).sort("date", -1)
+    if page is not None:
+        return paginate(cursor, lambda: db.orders.count_documents(query), page, page_size or 50)
+    return serialize_many(cursor)
 
 
 def get_order(order_id):
@@ -145,12 +147,21 @@ def _validate_checkout_payload(data):
     }
 
 
-def create_order(payload):
-    """The real checkout pipeline: validate -> look up/create the customer
-    -> atomically validate & decrement stock for every item -> compute
+def create_order(payload, session_customer_id=None):
+    """The real checkout pipeline: validate -> resolve the customer ->
+    atomically validate & decrement stock for every item -> compute
     shipping from store-info -> write the order. Product price/stock/name/
     sku are always read fresh from MongoDB; whatever the client sent for
     those is ignored.
+
+    `session_customer_id` is the authenticated customer's id from their
+    server-side session (None for a guest checkout) — never a client-
+    supplied id. When present, the order is always attributed to that
+    account and its real email, regardless of what the client's JSON body
+    claims, so a logged-in customer can never have an order misattributed
+    to (or land in the history of) a different account by editing the
+    request body. A guest checkout keeps the original email-based
+    find-or-create behavior.
 
     Stock checks + decrements + the order write happen inside a single
     MongoDB transaction (this deployment's replica set supports them), so
@@ -162,11 +173,17 @@ def create_order(payload):
     db = get_db()
     client = get_client()
 
-    # Customer lookup/creation is intentionally outside the transaction —
-    # see find_or_create_customer's docstring for why.
-    customer = find_or_create_customer(
-        clean["customer"]["name"], clean["customer"]["email"], clean["customer"]["phone"]
-    )
+    if session_customer_id:
+        customer = db.customers.find_one({"_id": session_customer_id})
+        if not customer:
+            raise ValidationError("חשבון הלקוח לא נמצא")
+        clean["customer"]["email"] = customer["email"]
+    else:
+        # Customer lookup/creation is intentionally outside the transaction —
+        # see find_or_create_customer's docstring for why.
+        customer = find_or_create_customer(
+            clean["customer"]["name"], clean["customer"]["email"], clean["customer"]["phone"]
+        )
 
     # Result is captured here because with_transaction's callback (below)
     # may run more than once (see docstring on the with_transaction call).
@@ -256,6 +273,11 @@ def create_order(payload):
             "pay": _PENDING_PAYMENT,
             "shipping": clean["shipping"],
             "payment": {"method": clean["payment"]["method"], "date": today},
+            # Not populated by anything today — no shipping-carrier API is
+            # integrated. Present (as null) so the customer "My Orders" UI
+            # and a future carrier integration share one schema from day
+            # one, instead of the UI needing a migration when that lands.
+            "shipment": None,
         }
         db.orders.insert_one(order_doc, session=session)
 

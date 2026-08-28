@@ -138,6 +138,11 @@
     color:var(--green);
     transition:opacity .15s ease, transform .15s ease;
   }
+  .lang-toggle-btn{
+    font-size:12.5px;font-weight:700;letter-spacing:0.02em;
+    border:1px solid var(--line, rgba(0,0,0,0.12));border-radius:20px;
+    width:auto;height:32px;padding:0 12px;
+  }
   .icon-btn:active{transform:scale(0.88);opacity:0.6;}
   .icon-btn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
   .bag-count{
@@ -582,6 +587,54 @@
     font-size:12.5px;color:var(--ink-soft);
   }
   .cart-item-total strong{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums;}
+
+  .text-faint{color:var(--ink-soft);}
+
+  /* My Orders */
+  .order-card{
+    border:1px solid var(--line);border-radius:var(--radius-s);padding:16px;margin-bottom:14px;
+    cursor:pointer;transition:border-color .15s ease;
+  }
+  .order-card:hover{border-color:var(--gold-soft);}
+  .order-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px;}
+  .order-card-id{font-weight:700;font-size:14.5px;}
+  .order-card-date{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .order-status-pill{
+    font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;
+    background:var(--green-tint);color:var(--green);
+  }
+  .order-status-pill.cancelled{background:#f5e7e5;color:#a3453a;}
+  .order-status-pill.delivered{background:#e4eee8;color:#2e6e52;}
+  .order-card-items{font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;}
+  .order-card-foot{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;font-weight:700;}
+
+  .order-timeline{display:flex;padding:6px 2px 22px;}
+  .order-timeline-step{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;}
+  .order-timeline-step .dot{
+    width:22px;height:22px;border-radius:50%;background:var(--ivory-deep);border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;margin-bottom:8px;z-index:1;
+  }
+  .order-timeline-step .dot svg{width:11px;height:11px;stroke:var(--ivory);fill:none;stroke-width:3;opacity:0;}
+  .order-timeline-step::before{
+    content:'';position:absolute;top:11px;right:50%;width:100%;height:2px;background:var(--line);z-index:0;
+  }
+  .order-timeline-step:first-child::before{display:none;}
+  .order-timeline-step.done .dot{background:var(--green);border-color:var(--green);}
+  .order-timeline-step.done .dot svg{opacity:1;}
+  .order-timeline-step.done::before{background:var(--green);}
+  .order-timeline-step.current .dot{background:var(--ivory);border-color:var(--green);box-shadow:0 0 0 3px var(--green-tint);}
+  .order-timeline-step .label{font-size:10.5px;color:var(--ink-soft);line-height:1.3;}
+  .order-timeline-step.done .label,.order-timeline-step.current .label{color:var(--ink);font-weight:600;}
+  .order-timeline.cancelled-flow .order-timeline-step .dot{background:#f5e7e5;border-color:#a3453a;}
+  .order-timeline.cancelled-flow .order-timeline-step .label{color:#a3453a;font-weight:600;}
+
+  .order-detail-row{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;}
+  .order-detail-row span:first-child{color:var(--ink-soft);}
+  .order-detail-row.total{font-weight:700;font-size:15px;border-top:1px solid var(--line);margin-top:6px;padding-top:12px;}
+  .order-shipment-note{
+    display:flex;gap:10px;align-items:flex-start;background:var(--ivory-deep);border-radius:var(--radius-s);
+    padding:12px 14px;margin:16px 0;font-size:12px;color:var(--ink-soft);line-height:1.5;
+  }
   .remove-btn{
     display:inline-flex;align-items:center;
     align-self:flex-start;
@@ -1110,17 +1163,18 @@
         <img id="headerLogo" class="brand-logo" src="" alt="בראשית יודאיקה">
       </div>
       <div class="top-icons">
-        <button class="icon-btn" id="searchToggle" aria-label="חיפוש">
+        <button class="icon-btn lang-toggle-btn" id="langToggleBtn" type="button" aria-label="Switch language / החלפת שפה">EN</button>
+        <button class="icon-btn" id="searchToggle" aria-label="חיפוש" data-i18n-aria="header.search">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>
         </button>
-        <button class="icon-btn" id="accountBtn" aria-label="אזור אישי והתחברות">
+        <button class="icon-btn" id="accountBtn" aria-label="אזור אישי והתחברות" data-i18n-aria="header.account">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.4"/><path d="M4.8 20c1.6-4.2 4.8-6.4 7.2-6.4s5.6 2.2 7.2 6.4"/></svg>
         </button>
-        <button class="icon-btn" id="favoritesOpenBtn" aria-label="המועדפים שלי">
+        <button class="icon-btn" id="favoritesOpenBtn" aria-label="המועדפים שלי" data-i18n-aria="header.favorites">
           <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 5c-2.3 4.5-9.3 9-9.3 9Z"/></svg>
           <span class="bag-count" id="favCount">0</span>
         </button>
-        <button class="icon-btn" id="cartOpenBtn" aria-label="הסל שלי">
+        <button class="icon-btn" id="cartOpenBtn" aria-label="הסל שלי" data-i18n-aria="header.cart">
           <svg viewBox="0 0 24 24"><path d="M7 8h10l1 11.2a2 2 0 0 1-2 2.1H8a2 2 0 0 1-2-2.1L7 8Z"/><path d="M9 8V6.6a3 3 0 0 1 6 0V8"/><path d="M7.6 11.2h8.8"/></svg>
           <span class="bag-count" id="bagCount">0</span>
         </button>
@@ -1128,7 +1182,7 @@
     </div>
     <nav class="desktop-nav" id="desktopNav"></nav>
     <div class="search-bar" id="searchBar">
-      <input type="text" id="searchInput" placeholder="חיפוש מוצרים, כגון פמוטים או גביע קידוש">
+      <input type="text" id="searchInput" placeholder="חיפוש מוצרים, כגון פמוטים או גביע קידוש" data-i18n-placeholder="header.searchPlaceholder">
     </div>
     </div>
   </header>
@@ -1212,30 +1266,30 @@
       </div>
       <div class="foot-cols">
         <div>
-          <h4>החברה</h4>
+          <h4 data-i18n="footer.company">החברה</h4>
           <ul>
-            <li><a href="#">אודות בראשית יודאיקה</a></li>
-            <li><a href="#">צור קשר</a></li>
-            <li><a href="#">משלוחים</a></li>
+            <li><a href="#" data-i18n="footer.about">אודות בראשית יודאיקה</a></li>
+            <li><a href="#" data-i18n="footer.contact">צור קשר</a></li>
+            <li><a href="#" data-i18n="footer.shipping">משלוחים</a></li>
           </ul>
         </div>
         <div>
-          <h4>שירות לקוחות</h4>
+          <h4 data-i18n="footer.customerService">שירות לקוחות</h4>
           <ul>
-            <li><a href="#">מדיניות החזרות</a></li>
-            <li><a href="#">פרטיות</a></li>
-            <li><a href="#">תנאי שימוש</a></li>
+            <li><a href="#" data-i18n="footer.returns">מדיניות החזרות</a></li>
+            <li><a href="#" data-i18n="footer.privacy">פרטיות</a></li>
+            <li><a href="#" data-i18n="footer.terms">תנאי שימוש</a></li>
           </ul>
         </div>
       </div>
       <div class="social-row">
-        <a href="#" aria-label="אינסטגרם"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" stroke="none"/></svg></a>
-        <a href="#" aria-label="פייסבוק"><svg viewBox="0 0 24 24"><path d="M14 9h3V6h-3a3 3 0 0 0-3 3v2H8v3h3v6h3v-6h3l1-3h-4V9a1 1 0 0 1 1-1Z"/></svg></a>
-        <a href="#" aria-label="פינטרסט"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 17c1-3.5 1.5-5.5 1.5-5.5m3.5-1.7a2.5 2.5 0 1 1-4.6 1.9"/></svg></a>
+        <a href="#" aria-label="אינסטגרם" data-i18n-aria="footer.instagram"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" stroke="none"/></svg></a>
+        <a href="#" aria-label="פייסבוק" data-i18n-aria="footer.facebook"><svg viewBox="0 0 24 24"><path d="M14 9h3V6h-3a3 3 0 0 0-3 3v2H8v3h3v6h3v-6h3l1-3h-4V9a1 1 0 0 1 1-1Z"/></svg></a>
+        <a href="#" aria-label="פינטרסט" data-i18n-aria="footer.pinterest"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 17c1-3.5 1.5-5.5 1.5-5.5m3.5-1.7a2.5 2.5 0 1 1-4.6 1.9"/></svg></a>
       </div>
       <div class="foot-bottom">
         <span>© 2026 בראשית יודאיקה</span>
-        <span>נבנה בישראל</span>
+        <span data-i18n="footer.madeInIsrael">נבנה בישראל</span>
       </div>
     </footer>
   </main>
@@ -1243,7 +1297,7 @@
   <!-- ================= PRODUCT VIEW ================= -->
   <section class="view" id="productView">
     <div class="view-header">
-      <button class="icon-btn" onclick="closeView('productView')" aria-label="חזרה">
+      <button class="icon-btn" onclick="closeView('productView')" aria-label="חזרה" data-i18n-aria="common.back">
         <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
       </button>
       <span class="title" id="pdCrumb"></span>
@@ -1319,8 +1373,8 @@
   <!-- ================= CART VIEW ================= -->
   <section class="view" id="cartView">
     <div class="view-header">
-      <button class="icon-btn" onclick="closeView('cartView')" aria-label="חזרה"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
-      <span class="title">הסל שלי</span>
+      <button class="icon-btn" onclick="closeView('cartView')" aria-label="חזרה" data-i18n-aria="common.back"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <span class="title" data-i18n="cart.title">הסל שלי</span>
       <span style="width:36px;"></span>
     </div>
     <div class="cart-body-pad" id="cartBody"></div>
@@ -1329,75 +1383,103 @@
   <!-- ================= FAVORITES VIEW ================= -->
   <section class="view" id="favoritesView">
     <div class="view-header">
-      <button class="icon-btn" onclick="closeView('favoritesView')" aria-label="חזרה"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
-      <span class="title">המועדפים שלי</span>
+      <button class="icon-btn" onclick="closeView('favoritesView')" aria-label="חזרה" data-i18n-aria="common.back"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <span class="title" data-i18n="favorites.title">המועדפים שלי</span>
       <span style="width:36px;"></span>
     </div>
     <div class="section" style="padding-top:22px;">
       <div class="grid" id="favoritesGrid"></div>
       <div class="empty-state" id="favoritesEmpty" style="display:none;">
         <span class="stamp"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.5-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 5c-2.3 4.5-9.3 9-9.3 9Z" stroke="currentColor" stroke-width="1.2"/></svg></span>
-        <h3 class="serif">אין עדיין פריטים מועדפים</h3>
-        <p>לחצי על סמל הלב בכרטיסיית מוצר כדי לשמור אותו כאן.</p>
-        <button class="btn btn-primary" onclick="closeView('favoritesView')">לגלות את הקולקציה</button>
+        <h3 class="serif" data-i18n="favorites.emptyTitle">אין עדיין פריטים מועדפים</h3>
+        <p data-i18n="favorites.emptyBody">לחצי על סמל הלב בכרטיסיית מוצר כדי לשמור אותו כאן.</p>
+        <button class="btn btn-primary" onclick="closeView('favoritesView')" data-i18n="common.discoverCollection">לגלות את הקולקציה</button>
       </div>
     </div>
+  </section>
+
+  <!-- ================= MY ORDERS VIEW ================= -->
+  <section class="view" id="ordersView">
+    <div class="view-header">
+      <button class="icon-btn" onclick="closeView('ordersView')" aria-label="חזרה" data-i18n-aria="common.back"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <span class="title" data-i18n="orders.title">ההזמנות שלי</span>
+      <span style="width:36px;"></span>
+    </div>
+    <div class="section" style="padding-top:22px;">
+      <div id="ordersList"></div>
+      <div class="empty-state" id="ordersEmpty" style="display:none;">
+        <span class="stamp"><svg viewBox="0 0 24 24" fill="none"><path d="M6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8Z" stroke="currentColor" stroke-width="1.2"/><path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.2"/></svg></span>
+        <h3 class="serif" data-i18n="orders.emptyTitle">עדיין אין הזמנות</h3>
+        <p data-i18n="orders.emptyBody">כשתבצעי הזמנה, תוכלי לעקוב אחריה כאן.</p>
+        <button class="btn btn-primary" onclick="closeView('ordersView')" data-i18n="common.discoverCollection">לגלות את הקולקציה</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ORDER DETAIL VIEW ================= -->
+  <section class="view" id="orderDetailView">
+    <div class="view-header">
+      <button class="icon-btn" onclick="closeView('orderDetailView');openView('ordersView');" aria-label="חזרה" data-i18n-aria="common.back"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <span class="title" id="orderDetailTitle">פרטי הזמנה</span>
+      <span style="width:36px;"></span>
+    </div>
+    <div class="section" id="orderDetailBody" style="padding-top:22px;"></div>
   </section>
 
   <!-- ================= CHECKOUT VIEW ================= -->
   <section class="view" id="checkoutView">
     <div class="view-header">
-      <button class="icon-btn" onclick="closeView('checkoutView')" aria-label="חזרה"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
-      <span class="title">השלמת הזמנה</span>
+      <button class="icon-btn" onclick="closeView('checkoutView')" aria-label="חזרה" data-i18n-aria="common.back"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <span class="title" data-i18n="checkout.title">השלמת הזמנה</span>
       <span style="width:36px;"></span>
     </div>
     <form id="checkoutForm" class="checkout-form-pad">
       <div class="checkout-col-left">
-      <div class="eyebrow" style="margin-bottom:8px;">פרטי לקוח</div>
+      <div class="eyebrow" style="margin-bottom:8px;" data-i18n="checkout.customerDetails">פרטי לקוח</div>
       <div class="field-row">
-        <div class="field"><label for="fName">שם פרטי</label><input id="fName" required></div>
-        <div class="field"><label for="lName">שם משפחה</label><input id="lName" required></div>
+        <div class="field"><label for="fName" data-i18n="checkout.firstName">שם פרטי</label><input id="fName" required></div>
+        <div class="field"><label for="lName" data-i18n="checkout.lastName">שם משפחה</label><input id="lName" required></div>
       </div>
-      <div class="field"><label for="fPhone">טלפון נייד</label><input id="fPhone" type="tel" required placeholder="050-0000000"></div>
-      <div class="field"><label for="fEmail">דוא"ל</label><input id="fEmail" type="email" required></div>
+      <div class="field"><label for="fPhone" data-i18n="checkout.phone">טלפון נייד</label><input id="fPhone" type="tel" required placeholder="050-0000000"></div>
+      <div class="field"><label for="fEmail" data-i18n="checkout.email">דוא"ל</label><input id="fEmail" type="email" required></div>
 
-      <div class="eyebrow" style="margin:12px 0 8px;">כתובת למשלוח</div>
-      <div class="field"><label for="fCity">עיר</label><input id="fCity" required></div>
+      <div class="eyebrow" style="margin:12px 0 8px;" data-i18n="checkout.shippingAddress">כתובת למשלוח</div>
+      <div class="field"><label for="fCity" data-i18n="checkout.city">עיר</label><input id="fCity" required></div>
       <div class="field-row">
-        <div class="field"><label for="fStreet">רחוב ומספר</label><input id="fStreet" required></div>
-        <div class="field" style="max-width:110px;"><label for="fZip">מיקוד</label><input id="fZip"></div>
+        <div class="field"><label for="fStreet" data-i18n="checkout.street">רחוב ומספר</label><input id="fStreet" required></div>
+        <div class="field" style="max-width:110px;"><label for="fZip" data-i18n="checkout.zip">מיקוד</label><input id="fZip"></div>
       </div>
 
-      <div class="eyebrow" style="margin:12px 0 8px;">אופן משלוח</div>
+      <div class="eyebrow" style="margin:12px 0 8px;" data-i18n="checkout.shippingMethod">אופן משלוח</div>
       <fieldset>
         <label class="ship-option">
           <input type="radio" name="ship" value="30" checked onchange="renderCheckoutSummary()">
-          <span class="txt"><span class="name">משלוח סטנדרטי</span><br><span class="sub">3–5 ימי עסקים</span></span>
+          <span class="txt"><span class="name" data-i18n="checkout.standardShipping">משלוח סטנדרטי</span><br><span class="sub" data-i18n="checkout.standardShippingEta">3–5 ימי עסקים</span></span>
           <span class="cost">₪30</span>
         </label>
         <label class="ship-option">
           <input type="radio" name="ship" value="60" onchange="renderCheckoutSummary()">
-          <span class="txt"><span class="name">משלוח מהיר</span><br><span class="sub">1–2 ימי עסקים</span></span>
+          <span class="txt"><span class="name" data-i18n="checkout.expressShipping">משלוח מהיר</span><br><span class="sub" data-i18n="checkout.expressShippingEta">1–2 ימי עסקים</span></span>
           <span class="cost">₪60</span>
         </label>
       </fieldset>
       </div>
       <div class="checkout-col-right">
-      <div class="eyebrow" style="margin-bottom:14px;">סיכום הזמנה</div>
+      <div class="eyebrow" style="margin-bottom:14px;" data-i18n="checkout.orderSummary">סיכום הזמנה</div>
       <div id="checkoutSummary" style="margin-bottom:22px;"></div>
       <div class="checkout-payment-divider"></div>
-      <div class="eyebrow" style="margin-bottom:14px;">אמצעי תשלום</div>
+      <div class="eyebrow" style="margin-bottom:14px;" data-i18n="checkout.paymentMethod">אמצעי תשלום</div>
       <div class="pay-placeholder">
         <span class="stamp"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="1.5" stroke="currentColor" stroke-width="1.3"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="1.3"/></svg></span>
-        <p>סליקת תשלום מאובטחת תתווסף בשלב הבא של הפיתוח. זהו תצוגה מקדימה בלבד.</p>
+        <p data-i18n="checkout.paymentPlaceholder">סליקת תשלום מאובטחת תתווסף בשלב הבא של הפיתוח. זהו תצוגה מקדימה בלבד.</p>
       </div>
       <div class="sticky-cta">
         <button class="btn btn-primary btn-block" id="placeOrderBtn">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.8" fill="none"><rect x="5" y="10" width="14" height="9" rx="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-          <span id="placeOrderBtnText">ביצוע הזמנה</span>
+          <span id="placeOrderBtnText" data-i18n="checkout.placeOrder">ביצוע הזמנה</span>
         </button>
       </div>
-      <p class="secure-note">תשלום מאובטח · תואם PCI DSS</p>
+      <p class="secure-note" data-i18n="checkout.secureNote">תשלום מאובטח · תואם PCI DSS</p>
       </div>
     </form>
   </section>
@@ -1408,51 +1490,111 @@
       <div class="confirm-stamp">
         <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
       </div>
-      <h3 class="serif">ההזמנה התקבלה</h3>
+      <h3 class="serif" data-i18n="confirm.title">ההזמנה התקבלה</h3>
       <p id="orderNumberDisplay" style="font-weight:600;color:var(--green);margin-bottom:8px;"></p>
-      <p>תודה שבחרת בבראשית יודאיקה. פרטי ההזמנה נשלחו לדוא"ל שלך, ונציג יצור קשר לאישור המשלוח.</p>
-      <button class="btn btn-primary btn-block" onclick="closeConfirm()">חזרה לחנות</button>
+      <p data-i18n="confirm.body">תודה שבחרת בבראשית יודאיקה. פרטי ההזמנה נשלחו לדוא"ל שלך, ונציג יצור קשר לאישור המשלוח.</p>
+      <button class="btn btn-primary btn-block" onclick="closeConfirm()" data-i18n="confirm.backToStore">חזרה לחנות</button>
     </div>
   </div>
 
   <!-- ================= PERSONAL AREA / LOGIN MODAL ================= -->
   <div class="account-overlay" id="accountOverlay">
-    <div class="account-panel">
-      <button class="icon-btn account-close" onclick="closeAccount()" aria-label="סגירה">
+    <div class="account-panel" role="dialog" aria-modal="true" aria-label="אזור אישי" tabindex="-1">
+      <button class="icon-btn account-close" onclick="closeAccount()" aria-label="סגירה" data-i18n-aria="common.close">
         <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
-      <div class="account-header">
-        <span class="stamp">
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 5 H23 C23 12.5 19 18 16 18 C13 18 9 12.5 9 5 Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-            <path d="M16 18 V24" stroke="currentColor" stroke-width="1.3"/>
-            <path d="M16 24 L11 27 M16 24 L21 27" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            <path d="M11 27 H21" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
-        </span>
-        <h3 class="serif">אזור אישי</h3>
-        <p>התחברי כדי לצפות בהזמנות ולשמור פריטים מועדפים</p>
+
+      <div id="accountLoginState">
+        <div class="account-header">
+          <span class="stamp">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 5 H23 C23 12.5 19 18 16 18 C13 18 9 12.5 9 5 Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M16 18 V24" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M16 24 L11 27 M16 24 L21 27" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M11 27 H21" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h3 class="serif" data-i18n="account.title">אזור אישי</h3>
+          <p data-i18n="account.loginSubtitle">התחברי כדי לצפות בהזמנות ולשמור פריטים מועדפים</p>
+        </div>
+        <form class="account-form" id="accountForm">
+          <div class="field">
+            <label for="accEmail" data-i18n="account.email">דוא"ל</label>
+            <input id="accEmail" type="email" required autocomplete="username">
+          </div>
+          <div class="field">
+            <label for="accPassword" data-i18n="account.password">סיסמה</label>
+            <input id="accPassword" type="password" required autocomplete="current-password">
+          </div>
+          <span class="field-error" id="accLoginError" role="alert" aria-live="polite"></span>
+          <a href="#" class="account-forgot" onclick="event.preventDefault();showToast(t('account.forgotPasswordToast'))" data-i18n="account.forgotPassword">שכחתי סיסמה</a>
+          <button type="submit" class="btn btn-primary btn-block" data-i18n="account.login">התחברות</button>
+        </form>
+        <div class="account-footer">
+          <span data-i18n="account.noAccount">אין לך חשבון?</span>
+          <a href="#" id="showRegisterLink" data-i18n="account.register">הרשמה</a>
+        </div>
       </div>
-      <form class="account-form" id="accountForm">
-        <div class="field">
-          <label for="accEmail">דוא"ל או טלפון</label>
-          <input id="accEmail" type="text" required autocomplete="username">
+
+      <div id="accountRegisterState" style="display:none;">
+        <div class="account-header">
+          <span class="stamp">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 5 H23 C23 12.5 19 18 16 18 C13 18 9 12.5 9 5 Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M16 18 V24" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M16 24 L11 27 M16 24 L21 27" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M11 27 H21" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h3 class="serif" data-i18n="account.register">הרשמה</h3>
+          <p data-i18n="account.registerSubtitle">יצירת חשבון חדש בבראשית יודאיקה</p>
         </div>
-        <div class="field">
-          <label for="accPassword">סיסמה</label>
-          <input id="accPassword" type="password" required autocomplete="current-password">
+        <form class="account-form" id="registerForm">
+          <div class="field">
+            <label for="regName" data-i18n="account.fullName">שם מלא</label>
+            <input id="regName" type="text" required autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="regEmail" data-i18n="account.email">דוא"ל</label>
+            <input id="regEmail" type="email" required autocomplete="username">
+          </div>
+          <div class="field">
+            <label for="regPhone" data-i18n="account.phone">טלפון</label>
+            <input id="regPhone" type="tel" required autocomplete="tel">
+          </div>
+          <div class="field">
+            <label for="regPassword" data-i18n="account.password">סיסמה</label>
+            <input id="regPassword" type="password" required minlength="8" autocomplete="new-password">
+          </div>
+          <span class="field-error" id="accRegisterError" role="alert" aria-live="polite"></span>
+          <button type="submit" class="btn btn-primary btn-block" data-i18n="account.register">הרשמה</button>
+        </form>
+        <div class="account-footer">
+          <span data-i18n="account.haveAccount">כבר יש לך חשבון?</span>
+          <a href="#" id="showLoginLink" data-i18n="account.login">התחברות</a>
         </div>
-        <a href="#" class="account-forgot" onclick="event.preventDefault();showToast('שחזור סיסמה – בקרוב')">שכחתי סיסמה</a>
-        <button type="submit" class="btn btn-primary btn-block">התחברות</button>
-      </form>
-      <div class="account-footer">
-        <span>אין לך חשבון?</span>
-        <a href="#" onclick="event.preventDefault();showToast('הרשמה – בקרוב')">הרשמה</a>
+      </div>
+
+      <div id="accountProfileState" style="display:none;">
+        <div class="account-header">
+          <span class="stamp">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 5 H23 C23 12.5 19 18 16 18 C13 18 9 12.5 9 5 Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M16 18 V24" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M16 24 L11 27 M16 24 L21 27" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M11 27 H21" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h3 class="serif" id="accProfileName"></h3>
+          <p id="accProfileEmail"></p>
+        </div>
+        <button type="button" class="btn btn-primary btn-block" id="accountMyOrdersBtn" style="margin-bottom:10px;" data-i18n="orders.title">ההזמנות שלי</button>
+        <button type="button" class="btn btn-outline btn-block" id="accountLogoutBtn" data-i18n="account.logout">התנתקות</button>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast"><span class="stamp"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span><span id="toastText"></span></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><span class="stamp"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span><span id="toastText"></span></div>
 
   <!-- ================= IMAGE LIGHTBOX / VIEWER ================= -->
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="תצוגת מוצר מוגדלת">
@@ -1530,6 +1672,128 @@ const PRODUCT_IMAGES = {
 };
 let PRODUCTS = [];
 
+/* ==================== I18N ====================
+   Covers the site's static UI chrome (nav, buttons, forms, statuses,
+   footer, toasts) in Hebrew and English, with a real RTL/LTR layout
+   switch. Product/category CONTENT (names, descriptions, materials) is
+   NOT translated — the catalog is single-language in MongoDB today (no
+   nameEn/descEn fields exist), so switching to English changes the
+   shop's interface language while product text stays Hebrew until the
+   catalog itself is entered bilingually (a separate, larger data-model
+   change). This is a real, working translation layer for everything it
+   does cover — not a stub. */
+const I18N = {
+  he: {
+    'header.search':'חיפוש', 'header.searchPlaceholder':'חיפוש מוצרים, כגון פמוטים או גביע קידוש',
+    'header.account':'אזור אישי והתחברות', 'header.favorites':'המועדפים שלי', 'header.cart':'הסל שלי',
+    'common.back':'חזרה', 'common.close':'סגירה', 'common.discoverCollection':'לגלות את הקולקציה',
+    'footer.company':'החברה', 'footer.about':'אודות בראשית יודאיקה', 'footer.contact':'צור קשר', 'footer.shipping':'משלוחים',
+    'footer.customerService':'שירות לקוחות', 'footer.returns':'מדיניות החזרות', 'footer.privacy':'פרטיות', 'footer.terms':'תנאי שימוש',
+    'footer.instagram':'אינסטגרם', 'footer.facebook':'פייסבוק', 'footer.pinterest':'פינטרסט', 'footer.madeInIsrael':'נבנה בישראל',
+    'cart.title':'הסל שלי', 'favorites.title':'המועדפים שלי',
+    'favorites.emptyTitle':'אין עדיין פריטים מועדפים', 'favorites.emptyBody':"לחצי על סמל הלב בכרטיסיית מוצר כדי לשמור אותו כאן.",
+    'orders.title':'ההזמנות שלי', 'orders.emptyTitle':'עדיין אין הזמנות', 'orders.emptyBody':'כשתבצעי הזמנה, תוכלי לעקוב אחריה כאן.',
+    'checkout.title':'השלמת הזמנה', 'checkout.customerDetails':'פרטי לקוח', 'checkout.firstName':'שם פרטי', 'checkout.lastName':'שם משפחה',
+    'checkout.phone':'טלפון נייד', 'checkout.email':'דוא"ל', 'checkout.shippingAddress':'כתובת למשלוח', 'checkout.city':'עיר',
+    'checkout.street':'רחוב ומספר', 'checkout.zip':'מיקוד', 'checkout.shippingMethod':'אופן משלוח',
+    'checkout.standardShipping':'משלוח סטנדרטי', 'checkout.standardShippingEta':'3–5 ימי עסקים',
+    'checkout.expressShipping':'משלוח מהיר', 'checkout.expressShippingEta':'1–2 ימי עסקים',
+    'checkout.orderSummary':'סיכום הזמנה', 'checkout.paymentMethod':'אמצעי תשלום',
+    'checkout.paymentPlaceholder':'סליקת תשלום מאובטחת תתווסף בשלב הבא של הפיתוח. זהו תצוגה מקדימה בלבד.',
+    'checkout.placeOrder':'ביצוע הזמנה', 'checkout.secureNote':'תשלום מאובטח · תואם PCI DSS',
+    'confirm.title':'ההזמנה התקבלה', 'confirm.body':'תודה שבחרת בבראשית יודאיקה. פרטי ההזמנה נשלחו לדוא"ל שלך, ונציג יצור קשר לאישור המשלוח.',
+    'confirm.backToStore':'חזרה לחנות',
+    'account.title':'אזור אישי', 'account.loginSubtitle':'התחברי כדי לצפות בהזמנות ולשמור פריטים מועדפים',
+    'account.email':'דוא"ל', 'account.password':'סיסמה', 'account.forgotPassword':'שכחתי סיסמה',
+    'account.forgotPasswordToast':'שחזור סיסמה – בקרוב', 'account.login':'התחברות',
+    'account.noAccount':'אין לך חשבון?', 'account.register':'הרשמה', 'account.registerSubtitle':'יצירת חשבון חדש בבראשית יודאיקה',
+    'account.fullName':'שם מלא', 'account.phone':'טלפון', 'account.haveAccount':'כבר יש לך חשבון?', 'account.logout':'התנתקות',
+    'stock.out':'אזל מהמלאי', 'stock.last':'פריט אחרון', 'stock.low':'פריטים אחרונים',
+    'order.status.pending':'התקבלה', 'order.status.processing':'בטיפול', 'order.status.shipped':'נשלחה',
+    'order.status.delivered':'נמסרה', 'order.status.cancelled':'בוטלה',
+    'common.quantity':'כמות', 'checkout.shipping':'משלוח', 'checkout.totalToPay':'סה״כ לתשלום',
+    'checkout.itemOutOfStock':'המוצר אזל מהמלאי — לא ניתן להשלים הזמנה זו',
+    'checkout.itemLowStock':'במלאי נותרו {n} יחידות בלבד — נא לעדכן את הכמות בסל',
+    'orders.orderNumber':'הזמנה #', 'orders.tracking':'מעקב הזמנה', 'orders.items':'פריטים',
+    'orders.subtotal':'סכום ביניים', 'orders.free':'חינם', 'orders.total':'סה״כ',
+    'orders.paymentStatus':'סטטוס תשלום', 'orders.shippingAddress':'כתובת למשלוח',
+    'orders.trackingLabel':'מספר מעקב', 'orders.perUnit':"ליח'",
+    'orders.trackingUnavailable':'מעקב משלוח בזמן אמת יתווסף לאחר חיבור שירות משלוחים. סטטוס ההזמנה למעלה משקף את השלב הנוכחי.',
+    'payment.status.pending':'ממתין לתשלום',
+  },
+  en: {
+    'header.search':'Search', 'header.searchPlaceholder':'Search products, e.g. candlesticks or kiddush cup',
+    'header.account':'Account & Login', 'header.favorites':'My Favorites', 'header.cart':'My Cart',
+    'common.back':'Back', 'common.close':'Close', 'common.discoverCollection':'Discover the Collection',
+    'footer.company':'Company', 'footer.about':'About Bereshit Judaica', 'footer.contact':'Contact Us', 'footer.shipping':'Shipping',
+    'footer.customerService':'Customer Service', 'footer.returns':'Return Policy', 'footer.privacy':'Privacy', 'footer.terms':'Terms of Use',
+    'footer.instagram':'Instagram', 'footer.facebook':'Facebook', 'footer.pinterest':'Pinterest', 'footer.madeInIsrael':'Made in Israel',
+    'cart.title':'My Cart', 'favorites.title':'My Favorites',
+    'favorites.emptyTitle':'No favorites yet', 'favorites.emptyBody':'Tap the heart icon on a product card to save it here.',
+    'orders.title':'My Orders', 'orders.emptyTitle':'No orders yet', 'orders.emptyBody':"Once you place an order, you'll be able to track it here.",
+    'checkout.title':'Checkout', 'checkout.customerDetails':'Customer Details', 'checkout.firstName':'First Name', 'checkout.lastName':'Last Name',
+    'checkout.phone':'Mobile Phone', 'checkout.email':'Email', 'checkout.shippingAddress':'Shipping Address', 'checkout.city':'City',
+    'checkout.street':'Street & Number', 'checkout.zip':'ZIP Code', 'checkout.shippingMethod':'Shipping Method',
+    'checkout.standardShipping':'Standard Shipping', 'checkout.standardShippingEta':'3–5 business days',
+    'checkout.expressShipping':'Express Shipping', 'checkout.expressShippingEta':'1–2 business days',
+    'checkout.orderSummary':'Order Summary', 'checkout.paymentMethod':'Payment Method',
+    'checkout.paymentPlaceholder':'Secure payment processing will be added in a later development phase. This is a preview only.',
+    'checkout.placeOrder':'Place Order', 'checkout.secureNote':'Secure checkout · PCI DSS compliant',
+    'confirm.title':'Order Received', 'confirm.body':"Thank you for choosing Bereshit Judaica. Order details were sent to your email, and a representative will contact you to confirm shipping.",
+    'confirm.backToStore':'Back to Store',
+    'account.title':'My Account', 'account.loginSubtitle':'Log in to view your orders and save favorite items',
+    'account.email':'Email', 'account.password':'Password', 'account.forgotPassword':'Forgot password',
+    'account.forgotPasswordToast':'Password recovery – coming soon', 'account.login':'Log In',
+    'account.noAccount':"Don't have an account?", 'account.register':'Sign Up', 'account.registerSubtitle':'Create a new Bereshit Judaica account',
+    'account.fullName':'Full Name', 'account.phone':'Phone', 'account.haveAccount':'Already have an account?', 'account.logout':'Log Out',
+    'stock.out':'Out of Stock', 'stock.last':'Last Item', 'stock.low':'Limited Stock',
+    'order.status.pending':'Order Received', 'order.status.processing':'Processing', 'order.status.shipped':'Shipped',
+    'order.status.delivered':'Delivered', 'order.status.cancelled':'Cancelled',
+    'common.quantity':'Qty', 'checkout.shipping':'Shipping', 'checkout.totalToPay':'Total to Pay',
+    'checkout.itemOutOfStock':'This item is out of stock — this order cannot be completed',
+    'checkout.itemLowStock':'Only {n} left in stock — please update the quantity in your cart',
+    'orders.orderNumber':'Order #', 'orders.tracking':'Order Tracking', 'orders.items':'Items',
+    'orders.subtotal':'Subtotal', 'orders.free':'Free', 'orders.total':'Total',
+    'orders.paymentStatus':'Payment Status', 'orders.shippingAddress':'Shipping Address',
+    'orders.trackingLabel':'Tracking Number', 'orders.perUnit':'each',
+    'orders.trackingUnavailable':'Real-time shipment tracking will be added once a shipping service is connected. The order status above reflects the current stage.',
+    'payment.status.pending':'Payment Pending',
+  },
+};
+
+let currentLang = localStorage.getItem('nezer_lang') || 'he';
+
+function t(key){
+  return (I18N[currentLang] && I18N[currentLang][key]) ?? (I18N.he[key] ?? key);
+}
+
+function applyTranslations(){
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === 'he' ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+  const langBtn = document.getElementById('langToggleBtn');
+  if(langBtn) langBtn.textContent = currentLang === 'he' ? 'EN' : 'עב';
+}
+
+function setLanguage(lang){
+  currentLang = lang;
+  localStorage.setItem('nezer_lang', lang);
+  applyTranslations();
+  // Re-render everything that builds its own markup at runtime (product
+  // cards, cart, stock badges, order timeline, ...) so language-dependent
+  // strings inside them (stock/order status) pick up the new language too.
+  if(typeof renderProductGrid === 'function') renderProductGrid();
+  if(typeof renderCategories === 'function') renderCategories();
+  if(typeof renderDesktopNav === 'function') renderDesktopNav();
+  if(document.getElementById('cartView')?.classList.contains('active') && typeof renderCart === 'function') renderCart();
+  if(document.getElementById('favoritesView')?.classList.contains('active') && typeof renderFavorites === 'function') renderFavorites();
+  if(document.getElementById('checkoutView')?.classList.contains('active') && typeof renderCheckoutSummary === 'function') renderCheckoutSummary();
+  if(document.getElementById('ordersView')?.classList.contains('active') && typeof loadMyOrders === 'function') loadMyOrders();
+  if(document.getElementById('orderDetailView')?.classList.contains('active') && currentOrderDetailId && typeof openOrderDetail === 'function') openOrderDetail(currentOrderDetailId);
+}
+
 /* Loads categories/products from the API and populates the module-level
    CATEGORIES/PRODUCTS arrays in place (not reassigned — every render
    function below closes over these same array references). Called once
@@ -1560,7 +1824,22 @@ let currentProduct = null;
 let pdQtyVal = 1;
 let favorites = JSON.parse(localStorage.getItem('nezer_favs') || '[]');
 
-function saveCart(){ localStorage.setItem('nezer_cart', JSON.stringify(cart)); updateBagCount(); }
+/** Guests keep their cart in localStorage (unchanged). A logged-in customer's
+ * cart lives server-side (see /api/cart) so it follows them across devices —
+ * this never touches localStorage once logged in, which is also what keeps a
+ * logged-out session on a shared device from ever seeing a previous
+ * customer's cart. The server write is fire-and-forget: it must never make
+ * routine cart edits feel slow, and the in-memory `cart` is already correct
+ * for this tab regardless of whether the sync succeeds. */
+function saveCart(){
+  updateBagCount();
+  if(CURRENT_CUSTOMER){
+    BereshitData.saveCart(cart.map(c => ({ productId:c.id, qty:c.qty })))
+      .catch(err => console.error('[Bereshit] Failed to sync cart to server:', err));
+  }else{
+    localStorage.setItem('nezer_cart', JSON.stringify(cart));
+  }
+}
 function saveFavs(){ localStorage.setItem('nezer_favs', JSON.stringify(favorites)); }
 
 function money(n){ return '₪' + n.toLocaleString('he-IL'); }
@@ -1611,13 +1890,13 @@ function badgeHtml(badge){
    never a static/demo label. A sold-out item's corner badge always wins
    over new/sale (advertising a sale on something unavailable is misleading). */
 function stockCornerBadgeHtml(p){
-  if(p.stock === 0) return `<span class="badge out">אזל מהמלאי</span>`;
+  if(p.stock === 0) return `<span class="badge out">${t('stock.out')}</span>`;
   return badgeHtml(p.badge);
 }
 function stockNoteHtml(p){
   if(p.stock === 0) return '';
-  if(p.stock === 1) return `<p class="stock-note last">פריט אחרון</p>`;
-  if(p.threshold != null && p.stock <= p.threshold) return `<p class="stock-note low">פריטים אחרונים</p>`;
+  if(p.stock === 1) return `<p class="stock-note last">${t('stock.last')}</p>`;
+  if(p.threshold != null && p.stock <= p.threshold) return `<p class="stock-note low">${t('stock.low')}</p>`;
   return '';
 }
 function cardHtml(p){
@@ -1687,6 +1966,63 @@ function syncAddButtons(id){
   });
   if(currentProduct && currentProduct.id === id) updatePdAddButtons();
 }
+/** Redraws only the stock-dependent parts of the open product view (note
+ * text, qty row, add-to-cart button) from currentProduct's current data —
+ * unlike openProduct(id), this never resets scroll position, gallery
+ * index, or the quantity the customer already picked, so it's safe to
+ * call repeatedly while someone is actively looking at the page. */
+function refreshProductViewStock(){
+  if(!currentProduct) return;
+  const stockNoteEl = document.getElementById('pdStockNote');
+  stockNoteEl.className = 'stock-note';
+  if(currentProduct.stock === 0){
+    stockNoteEl.textContent = t('stock.out');
+    stockNoteEl.classList.add('last');
+  } else if(currentProduct.stock === 1){
+    stockNoteEl.textContent = t('stock.last');
+    stockNoteEl.classList.add('last');
+  } else if(currentProduct.threshold != null && currentProduct.stock <= currentProduct.threshold){
+    stockNoteEl.textContent = t('stock.low');
+    stockNoteEl.classList.add('low');
+  } else {
+    stockNoteEl.textContent = '';
+  }
+  document.getElementById('pdQtyRow').style.display = currentProduct.stock === 0 ? 'none' : '';
+  document.getElementById('pdPrice').textContent = money(currentProduct.price);
+  document.getElementById('pdOldPrice').textContent = currentProduct.oldPrice ? money(currentProduct.oldPrice) : '';
+  updatePdAddButtons();
+}
+
+/* MongoDB stays the single source of truth for stock; this is just a
+ * lightweight resync layer on top of it, not a live push channel — see
+ * the note on POLL_INTERVAL_MS below for why polling (not WebSocket/SSE)
+ * is the honest choice for this deployment target. */
+let productStockPollTimer = null;
+const STOCK_POLL_INTERVAL_MS = 20000;
+
+function startProductStockPolling(id){
+  stopProductStockPolling();
+  productStockPollTimer = setInterval(async () => {
+    if(!document.getElementById('productView').classList.contains('active')) { stopProductStockPolling(); return; }
+    try{
+      const fresh = await BereshitData.getProduct(id);
+      const local = findProduct(id);
+      if(local){
+        local.stock = fresh.stock;
+        local.threshold = fresh.threshold;
+        local.status = fresh.status;
+        local.price = fresh.price;
+        local.oldPrice = fresh.oldPrice;
+        local.badge = fresh.badge;
+      }
+      if(currentProduct && currentProduct.id === id) refreshProductViewStock();
+    }catch(err){ /* a transient poll failure isn't worth interrupting anyone's browsing over */ }
+  }, STOCK_POLL_INTERVAL_MS);
+}
+function stopProductStockPolling(){
+  if(productStockPollTimer){ clearInterval(productStockPollTimer); productStockPollTimer = null; }
+}
+
 function updatePdAddButtons(){
   if(!currentProduct) return;
   const inCart = isInCart(currentProduct.id);
@@ -1824,21 +2160,8 @@ function openProduct(id){
   document.getElementById('pdDim').textContent = currentProduct.dim;
   document.getElementById('pdQty').textContent = '1';
 
-  const stockNoteEl = document.getElementById('pdStockNote');
-  stockNoteEl.className = 'stock-note';
-  if(currentProduct.stock === 0){
-    stockNoteEl.textContent = 'אזל מהמלאי';
-    stockNoteEl.classList.add('last');
-  } else if(currentProduct.stock === 1){
-    stockNoteEl.textContent = 'פריט אחרון';
-    stockNoteEl.classList.add('last');
-  } else if(currentProduct.threshold != null && currentProduct.stock <= currentProduct.threshold){
-    stockNoteEl.textContent = 'פריטים אחרונים';
-    stockNoteEl.classList.add('low');
-  } else {
-    stockNoteEl.textContent = '';
-  }
-  document.getElementById('pdQtyRow').style.display = currentProduct.stock === 0 ? 'none' : '';
+  refreshProductViewStock();
+  startProductStockPolling(id);
 
   const isFav = favorites.includes(id);
   document.getElementById('pdFavBtn').querySelector('svg').style.fill = isFav ? 'var(--gold)' : 'none';
@@ -1905,20 +2228,20 @@ function renderCheckoutSummary(){
   document.getElementById('checkoutSummary').innerHTML = `
     ${items.map(c=>{
       const shortage = c.product.stock === 0
-        ? 'המוצר אזל מהמלאי — לא ניתן להשלים הזמנה זו'
-        : (c.qty > c.product.stock ? `במלאי נותרו ${c.product.stock} יחידות בלבד — נא לעדכן את הכמות בסל` : '');
+        ? t('checkout.itemOutOfStock')
+        : (c.qty > c.product.stock ? t('checkout.itemLowStock').replace('{n}', c.product.stock) : '');
       return `
       <div class="checkout-item">
         <img src="${c.product.images[0]}" alt="${escAttr(c.product.name)}">
         <div class="checkout-item-info">
           <span class="checkout-item-name">${c.product.name}</span>
-          <span class="checkout-item-qty">כמות: ${c.qty}</span>
+          <span class="checkout-item-qty">${t('common.quantity')}: ${c.qty}</span>
           ${shortage ? `<p class="stock-note last">${shortage}</p>` : ''}
         </div>
         <span class="checkout-item-price">${money(c.product.price*c.qty)}</span>
       </div>`;}).join('')}
-    <div class="summary-row"><span>משלוח</span><span>${money(shipCost)}</span></div>
-    <div class="summary-row total"><span>סה״כ לתשלום</span><span>${money(subtotal+shipCost)}</span></div>
+    <div class="summary-row"><span>${t('checkout.shipping')}</span><span>${money(shipCost)}</span></div>
+    <div class="summary-row total"><span>${t('checkout.totalToPay')}</span><span>${money(subtotal+shipCost)}</span></div>
   `;
 }
 
@@ -2024,6 +2347,7 @@ function openView(id){
 }
 function closeView(id){
   document.getElementById(id).classList.remove('active');
+  if(id === 'productView') stopProductStockPolling();
   const anyOpen = document.querySelectorAll('.view.active').length > 0;
   const accountOpen = document.getElementById('accountOverlay').classList.contains('active');
   const lightboxOpen = document.getElementById('lightbox').classList.contains('active');
@@ -2033,23 +2357,297 @@ document.getElementById('cartOpenBtn').addEventListener('click', () => { renderC
 document.getElementById('favoritesOpenBtn').addEventListener('click', () => { renderFavorites(); openView('favoritesView'); });
 document.getElementById('accountBtn').addEventListener('click', openAccount);
 
+/* ==================== CUSTOMER ACCOUNT (real session auth) ==================== */
+let CURRENT_CUSTOMER = null; // null = guest; { id, name, email, phone } once logged in
+
+function showAccountState(){
+  const loggedIn = !!CURRENT_CUSTOMER;
+  document.getElementById('accountLoginState').style.display = loggedIn ? 'none' : '';
+  document.getElementById('accountRegisterState').style.display = 'none';
+  document.getElementById('accountProfileState').style.display = loggedIn ? '' : 'none';
+  if(loggedIn){
+    document.getElementById('accProfileName').textContent = CURRENT_CUSTOMER.name;
+    document.getElementById('accProfileEmail').textContent = CURRENT_CUSTOMER.email;
+  }
+}
+
+/** Called right after CURRENT_CUSTOMER becomes non-null (page-load session
+ * check, login, or register): merges whatever guest cart this browser had
+ * (localStorage) with the account's server-side cart, adopts the union as
+ * the active cart, and — critically — clears the localStorage guest cart so
+ * those items are now the account's alone and never resurface for the next
+ * guest to use this device. Quantities for the same product combine rather
+ * than either side silently overwriting the other (no accidental data loss). */
+async function syncCartForLogin(){
+  let serverItems = [];
+  try{
+    const res = await BereshitData.getCart();
+    serverItems = res.items || [];
+  }catch(err){ /* proceed with just the guest cart the customer already has loaded */ }
+
+  const merged = {};
+  serverItems.forEach(it => { merged[it.productId] = (merged[it.productId]||0) + it.qty; });
+  cart.forEach(it => { merged[it.id] = (merged[it.id]||0) + it.qty; });
+  cart = Object.entries(merged).map(([id, qty]) => ({ id:Number(id), qty }));
+
+  localStorage.removeItem('nezer_cart');
+  saveCart(); // CURRENT_CUSTOMER is already set here, so this pushes the merged cart to the server
+
+  try{ await revalidateCartProducts(); }catch(err){ /* best-effort — checkout will re-validate regardless */ }
+  if(document.getElementById('cartView')?.classList.contains('active')) renderCart();
+}
+
+async function refreshAccountSession(){
+  try{
+    const { customer } = await BereshitData.customerMe();
+    CURRENT_CUSTOMER = customer;
+    await syncCartForLogin();
+  }catch(err){
+    CURRENT_CUSTOMER = null;
+  }
+  showAccountState();
+}
+
+const FOCUSABLE_SEL = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+let accountOverlayTrigger = null;
+function accountOverlayTrapHandler(e){
+  if(e.key !== 'Tab') return;
+  const panel = document.querySelector('#accountOverlay .account-panel');
+  const focusable = Array.from(panel.querySelectorAll(FOCUSABLE_SEL)).filter(f=>f.offsetParent!==null);
+  if(!focusable.length) return;
+  const first = focusable[0], last = focusable[focusable.length-1];
+  if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+}
 function openAccount(){
+  document.getElementById('accLoginError').textContent = '';
+  document.getElementById('accRegisterError').textContent = '';
+  showAccountState();
+  accountOverlayTrigger = document.activeElement;
   document.getElementById('accountOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', accountOverlayTrapHandler);
+  setTimeout(()=>{
+    const panel = document.querySelector('#accountOverlay .account-panel');
+    const focusable = Array.from(panel.querySelectorAll(FOCUSABLE_SEL)).filter(f=>f.offsetParent!==null);
+    (focusable[0] || panel).focus();
+  }, 0);
 }
 function closeAccount(){
   document.getElementById('accountOverlay').classList.remove('active');
+  document.removeEventListener('keydown', accountOverlayTrapHandler);
   const anyViewOpen = document.querySelectorAll('.view.active').length > 0;
   const lightboxOpen = document.getElementById('lightbox').classList.contains('active');
   if(!anyViewOpen && !lightboxOpen) document.body.style.overflow = '';
+  if(accountOverlayTrigger && document.body.contains(accountOverlayTrigger)) accountOverlayTrigger.focus();
+  accountOverlayTrigger = null;
 }
 document.getElementById('accountOverlay').addEventListener('click', (e) => {
   if(e.target.id === 'accountOverlay') closeAccount();
 });
-document.getElementById('accountForm').addEventListener('submit', (e) => {
+
+document.getElementById('showRegisterLink').addEventListener('click', (e)=>{
   e.preventDefault();
-  showToast('התחברות – בקרוב, זהו פרוטוטייפ בלבד');
+  document.getElementById('accountLoginState').style.display = 'none';
+  document.getElementById('accountRegisterState').style.display = '';
 });
+document.getElementById('showLoginLink').addEventListener('click', (e)=>{
+  e.preventDefault();
+  document.getElementById('accountRegisterState').style.display = 'none';
+  document.getElementById('accountLoginState').style.display = '';
+});
+
+document.getElementById('accountForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById('accLoginError');
+  errEl.textContent = '';
+  const email = document.getElementById('accEmail').value.trim();
+  const password = document.getElementById('accPassword').value;
+  try{
+    const { customer } = await BereshitData.customerLogin(email, password);
+    CURRENT_CUSTOMER = customer;
+    await syncCartForLogin();
+    showAccountState();
+    showToast(`ברוכה הבאה, ${customer.name}!`);
+  }catch(err){
+    errEl.textContent = err.message || 'ההתחברות נכשלה';
+  }
+});
+
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById('accRegisterError');
+  errEl.textContent = '';
+  const data = {
+    name: document.getElementById('regName').value.trim(),
+    email: document.getElementById('regEmail').value.trim(),
+    phone: document.getElementById('regPhone').value.trim(),
+    password: document.getElementById('regPassword').value,
+  };
+  try{
+    const { customer } = await BereshitData.customerRegister(data);
+    CURRENT_CUSTOMER = customer;
+    await syncCartForLogin();
+    showAccountState();
+    showToast(`ברוכה הבאה, ${customer.name}! החשבון נוצר בהצלחה`);
+  }catch(err){
+    errEl.textContent = err.message || 'ההרשמה נכשלה';
+  }
+});
+
+document.getElementById('accountLogoutBtn').addEventListener('click', async () => {
+  try{ await BereshitData.customerLogout(); }catch(err){ /* cookie clears client-side regardless */ }
+  CURRENT_CUSTOMER = null;
+  // The account's cart lived only server-side and in memory — never in
+  // localStorage — so there is nothing to "leave behind" here. Starting the
+  // next user of this device (or this same person as a guest) from an empty
+  // cart is correct: it prevents the previous account's items from ever
+  // being visible to whoever uses this browser next.
+  cart = [];
+  saveCart();
+  renderCart();
+  showAccountState();
+  closeAccount();
+  showToast('התנתקת בהצלחה');
+});
+
+/* ==================== MY ORDERS ==================== */
+// Server-side authoritative fields — mirrors backend/models/schemas.py's
+// ORDER_STATUS_FLOW exactly, so the timeline always reflects the real
+// state machine the API enforces, not a UI-invented one.
+const ORDER_STATUS_FLOW = ['ממתין לאישור', 'בטיפול', 'נשלח', 'נמסר'];
+// Maps the backend's authoritative Hebrew status values to i18n keys —
+// the source of truth for WHICH statuses exist is still the server (see
+// backend/models/schemas.py), this only controls how each one is
+// *displayed* in the customer's chosen language.
+const ORDER_STATUS_I18N_KEY = {
+  'ממתין לאישור':'order.status.pending', 'בטיפול':'order.status.processing', 'נשלח':'order.status.shipped',
+  'נמסר':'order.status.delivered', 'בוטל':'order.status.cancelled',
+};
+function orderStatusLabel(status){
+  const key = ORDER_STATUS_I18N_KEY[status];
+  return key ? t(key) : status;
+}
+const PAYMENT_STATUS_I18N_KEY = { 'ממתין לתשלום':'payment.status.pending' };
+function paymentStatusLabel(pay){
+  const key = PAYMENT_STATUS_I18N_KEY[pay];
+  return key ? t(key) : pay;
+}
+
+document.getElementById('accountMyOrdersBtn').addEventListener('click', async () => {
+  closeAccount();
+  openView('ordersView');
+  await loadMyOrders();
+});
+
+async function loadMyOrders(){
+  const listEl = document.getElementById('ordersList');
+  const emptyEl = document.getElementById('ordersEmpty');
+  listEl.innerHTML = '<p class="text-faint" style="padding:20px 0;text-align:center;">טוען הזמנות...</p>';
+  let orders = [];
+  try{
+    orders = await BereshitData.getOrders();
+  }catch(err){
+    listEl.innerHTML = '';
+    showToast('שגיאה בטעינת ההזמנות: ' + err.message);
+    return;
+  }
+  orders.sort((a,b)=> (a.date < b.date ? 1 : -1));
+  MY_ORDERS = orders;
+  listEl.innerHTML = '';
+  emptyEl.style.display = orders.length ? 'none' : '';
+  orders.forEach(o => listEl.appendChild(buildOrderCard(o)));
+}
+
+let MY_ORDERS = [];
+
+function buildOrderCard(o){
+  const el = document.createElement('div');
+  el.className = 'order-card';
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  const cancelled = o.status === 'בוטל';
+  const pillClass = cancelled ? 'cancelled' : (o.status === 'נמסר' ? 'delivered' : '');
+  const itemsSummary = o.items.map(it => `${it.name} ×${it.qty}`).join(', ');
+  el.innerHTML = `
+    <div class="order-card-head">
+      <div>
+        <div class="order-card-id">${t('orders.orderNumber')}${escAttr(o.id)}</div>
+        <div class="order-card-date">${escAttr(o.date)}</div>
+      </div>
+      <span class="order-status-pill ${pillClass}">${escAttr(orderStatusLabel(o.status))}</span>
+    </div>
+    <div class="order-card-items">${escAttr(itemsSummary)}</div>
+    <div class="order-card-foot"><span>${money(o.total + (o.shippingCost||0))}</span><span class="text-faint" style="font-weight:400;font-size:12px;">${escAttr(paymentStatusLabel(o.pay)||'')}</span></div>
+  `;
+  const open = () => openOrderDetail(o.id);
+  el.addEventListener('click', open);
+  el.addEventListener('keydown', e => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); open(); } });
+  return el;
+}
+
+function orderTimelineHtml(status){
+  if(status === 'בוטל'){
+    return `<div class="order-timeline cancelled-flow">
+      <div class="order-timeline-step done"><div class="dot"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div><div class="label">${t('order.status.pending')}</div></div>
+      <div class="order-timeline-step done"><div class="dot"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></div><div class="label">${t('order.status.cancelled')}</div></div>
+    </div>`;
+  }
+  const idx = ORDER_STATUS_FLOW.indexOf(status);
+  return `<div class="order-timeline">${ORDER_STATUS_FLOW.map((s, i) => {
+    const cls = i < idx ? 'done' : (i === idx ? 'current' : '');
+    return `<div class="order-timeline-step ${cls}">
+      <div class="dot"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="label">${escAttr(orderStatusLabel(s))}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+let currentOrderDetailId = null; // tracked so a language switch can re-render the open detail view in the new language
+
+function openOrderDetail(orderId){
+  const o = MY_ORDERS.find(x => x.id === orderId);
+  if(!o) return;
+  currentOrderDetailId = orderId;
+  document.getElementById('orderDetailTitle').textContent = `${t('orders.orderNumber')}${o.id}`;
+  const itemsHtml = o.items.map(it => {
+    const product = findProduct(it.productId);
+    const img = product && product.images && product.images[0];
+    return `
+      <div class="cart-item">
+        ${img ? `<img src="${img}" alt="${escAttr(it.name)}">` : `<div style="width:80px;height:92px;border-radius:var(--radius-s);background:var(--green-tint);flex-shrink:0;"></div>`}
+        <div class="cart-item-body">
+          <span class="cart-item-name serif">${escAttr(it.name)}</span>
+          <span class="cart-item-cat">${escAttr(it.cat||'')} · ${t('common.quantity')}: ${it.qty}</span>
+          <div class="cart-item-pricing"><span class="unit-price">${money(it.price)} <span class="unit-label">${t('orders.perUnit')}</span></span></div>
+          <div class="cart-item-total">${t('orders.total')}: <strong>${money(it.lineTotal)}</strong></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const shippingCost = o.shippingCost || 0;
+  document.getElementById('orderDetailBody').innerHTML = `
+    <h3 class="serif" style="font-size:16px;margin-bottom:14px;">${t('orders.tracking')}</h3>
+    ${orderTimelineHtml(o.status)}
+    <div class="order-shipment-note">
+      <span class="stamp" style="width:16px;height:16px;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 11h13l4 4v4h-3"/><circle cx="7.5" cy="19" r="1.6"/><circle cx="16.5" cy="19" r="1.6"/><path d="M3 11V6h10v9"/></svg></span>
+      <span>${o.shipment && o.shipment.trackingNumber
+        ? `${t('orders.trackingLabel')}: ${escAttr(o.shipment.trackingNumber)} (${escAttr(o.shipment.provider||'')})`
+        : t('orders.trackingUnavailable')}</span>
+    </div>
+    <h3 class="serif" style="font-size:16px;margin:22px 0 4px;">${t('orders.items')}</h3>
+    ${itemsHtml}
+    <div style="margin-top:18px;">
+      <div class="order-detail-row"><span>${t('orders.subtotal')}</span><span>${money(o.total)}</span></div>
+      <div class="order-detail-row"><span>${t('checkout.shipping')}</span><span>${shippingCost ? money(shippingCost) : t('orders.free')}</span></div>
+      <div class="order-detail-row total"><span>${t('orders.total')}</span><span>${money(o.total + shippingCost)}</span></div>
+      <div class="order-detail-row"><span>${t('orders.paymentStatus')}</span><span>${escAttr(paymentStatusLabel(o.pay)||'')}</span></div>
+      <div class="order-detail-row"><span>${t('orders.shippingAddress')}</span><span>${escAttr(o.shipping?.address||'')}, ${escAttr(o.shipping?.city||'')}</span></div>
+    </div>
+  `;
+  closeView('ordersView');
+  openView('orderDetailView');
+}
 
 /* ==================== SEARCH ==================== */
 const searchToggle = document.getElementById('searchToggle');
@@ -2114,6 +2712,19 @@ lightboxTrack.addEventListener('scroll', () => {
   }
 });
 
+/* Escape closes whichever overlay is currently topmost — lightbox, then
+ * the account panel, then any open full-screen view (cart/checkout/
+ * product/orders/etc). Keyboard and screen-reader users need this same
+ * "get me out of here" behavior every mouse user already has via the
+ * backdrop click. */
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'Escape') return;
+  if(lightboxEl.classList.contains('active')){ closeLightbox(); return; }
+  if(document.getElementById('accountOverlay').classList.contains('active')){ closeAccount(); return; }
+  const openView = document.querySelector('.view.active');
+  if(openView) closeView(openView.id);
+});
+
 /* Double-tap and basic pinch-to-zoom on the active slide image */
 let lbLastTap = 0;
 let lbPinchStartDist = 0;
@@ -2169,13 +2780,17 @@ document.getElementById('heroImg').src = IMG_KIDDUSH_TRAY;
 document.getElementById('headerLogo').src = LOGO_IMG;
 document.getElementById('footerLogo').src = LOGO_IMG;
 
+document.getElementById('langToggleBtn').addEventListener('click', ()=> setLanguage(currentLang==='he' ? 'en' : 'he'));
+
 (async function boot(){
+  applyTranslations();
   try{
     await loadCatalog();
   }catch(err){
     console.error('[Bereshit] Failed to load products/categories from the API:', err);
     showToast('לא ניתן לטעון את קטלוג המוצרים כרגע. נסו לרענן את הדף.');
   }
+  await refreshAccountSession(); // resolves CURRENT_CUSTOMER and merges any guest cart into it, if logged in
   renderCategories();
   renderDesktopNav();
   renderProductGrid();

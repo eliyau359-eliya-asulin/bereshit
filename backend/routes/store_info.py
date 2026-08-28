@@ -3,6 +3,7 @@ from pymongo.errors import PyMongoError
 
 from backend.models.schemas import ValidationError
 from backend.services import store_info_service as svc
+from backend.auth.decorators import require_admin
 
 bp = Blueprint("store_info", __name__, url_prefix="/api/store-info")
 
@@ -19,6 +20,7 @@ def get_store_info():
 
 
 @bp.put("")
+@require_admin("settings:write")
 def update_store_info():
     data = request.get_json(silent=True)
     if data is None:
