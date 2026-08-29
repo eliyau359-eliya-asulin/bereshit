@@ -206,7 +206,7 @@ table{border-collapse:collapse;width:100%;}
   gap:16px;
 }
 .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
-.mobile-menu-btn{display:none;width:38px;height:38px;align-items:center;justify-content:center;color:var(--green);border-radius:var(--radius-s);flex-shrink:0;}
+.mobile-menu-btn{display:none;width:44px;height:44px;align-items:center;justify-content:center;color:var(--green);border-radius:var(--radius-s);flex-shrink:0;}
 .mobile-menu-btn:hover{background:var(--green-tint);}
 .topbar-title{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .topbar-title h1{font-size:19px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -261,7 +261,7 @@ table{border-collapse:collapse;width:100%;}
 .btn:disabled{opacity:0.45;pointer-events:none;}
 
 .icon-action{
-  width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-s);
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-s);
   color:var(--ink-soft);transition:background .15s ease, color .15s ease;
 }
 .icon-action:hover{background:var(--ivory-deep);color:var(--ink);}
@@ -380,7 +380,7 @@ table{border-collapse:collapse;width:100%;}
 .pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--line);}
 .pagination .pg-info{font-size:12px;color:var(--ink-faint);}
 .pg-btns{display:flex;gap:4px;}
-.pg-btn{width:30px;height:30px;border-radius:var(--radius-s);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink-soft);}
+.pg-btn{width:36px;height:36px;border-radius:var(--radius-s);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink-soft);}
 .pg-btn:hover{background:var(--ivory-deep);}
 .pg-btn.active{background:var(--green);color:var(--ivory);}
 
@@ -395,7 +395,7 @@ table{border-collapse:collapse;width:100%;}
 .pgrid-foot{display:flex;align-items:center;justify-content:space-between;}
 .pgrid-price{font-weight:700;font-size:13.5px;}
 .view-toggle{display:flex;background:var(--ivory-deep);border-radius:var(--radius-s);padding:3px;gap:2px;}
-.view-toggle button{width:30px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:2px;color:var(--ink-soft);}
+.view-toggle button{width:34px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:2px;color:var(--ink-soft);}
 .view-toggle button.active{background:var(--white);color:var(--green);box-shadow:var(--shadow-soft);}
 .view-toggle .icon{width:14px;height:14px;}
 
@@ -451,6 +451,7 @@ table{border-collapse:collapse;width:100%;}
   .data-table td.cell-actions{justify-content:flex-start;gap:10px;}
   .data-table td.cell-actions::before{content:none;}
   .data-table td .cell-main{flex:1;min-width:0;justify-content:flex-end;}
+  .data-table .icon-action{width:40px;height:40px;}
 }
 
 /* Barcode scanner */
@@ -536,7 +537,7 @@ table{border-collapse:collapse;width:100%;}
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line);background:var(--white);}
 .modal-head h3{font-size:16.5px;}
 .modal-head .sub{font-size:11.5px;color:var(--ink-faint);margin-top:3px;font-weight:400;}
-.modal-close{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:background .15s ease;flex-shrink:0;}
+.modal-close{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:background .15s ease;flex-shrink:0;}
 .modal-close:hover{background:var(--ivory-deep);}
 .modal-body{padding:24px;overflow-y:auto;flex:1;}
 .modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid var(--line);background:var(--white);flex-wrap:wrap;}
@@ -685,7 +686,7 @@ table{border-collapse:collapse;width:100%;}
 .login-box .field-error{display:block;min-height:16px;margin-bottom:4px;}
 
 .sidebar-logout-btn{
-  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   color:var(--ink-faint);flex-shrink:0;transition:background .15s ease,color .15s ease;margin-inline-start:auto;
 }
 .sidebar-logout-btn:hover{background:var(--danger-tint);color:var(--danger);}

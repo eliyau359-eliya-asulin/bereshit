@@ -157,7 +157,7 @@
     display:flex;align-items:center;justify-content:center;
     line-height:1;
   }
-  .top-icons{display:flex;align-items:center;gap:0px;}
+  .top-icons{display:flex;align-items:center;gap:4px;}
 
   .search-bar{
     max-height:0;
@@ -358,7 +358,7 @@
     position:absolute;
     bottom:9px; left:9px;
     z-index:2;
-    width:30px;height:30px;
+    width:40px;height:40px;
     border-radius:50%;
     background:rgba(248,246,241,0.9);
     border:1.5px solid #c9c5bd;
@@ -392,7 +392,7 @@
   .price{font-size:16px;font-weight:800;letter-spacing:0.01em;font-variant-numeric:tabular-nums;}
   .price-old{font-size:11px;color:#9b9994;text-decoration:line-through;font-variant-numeric:tabular-nums;}
   .add-btn{
-    width:32px;height:32px;
+    width:44px;height:44px;
     border-radius:50%;
     background:var(--green);
     color:var(--ivory);
@@ -523,7 +523,7 @@
   }
   .qty-label{font-size:13.5px;font-weight:600;}
   .qty-ctrl{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:var(--radius-s);}
-  .qty-ctrl button{width:34px;height:34px;font-size:16px;display:flex;align-items:center;justify-content:center;}
+  .qty-ctrl button{width:40px;height:40px;font-size:16px;display:flex;align-items:center;justify-content:center;}
   .qty-ctrl button:active{background:var(--green-tint);}
   .qty-ctrl .num{width:32px;text-align:center;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;}
 
@@ -573,7 +573,7 @@
     width:80px;height:92px;object-fit:cover;border-radius:var(--radius-s);flex-shrink:0;
     cursor:pointer;
   }
-  .cart-item-body{flex:1;display:flex;flex-direction:column;}
+  .cart-item-body{flex:1;display:flex;flex-direction:column;min-width:0;}
   .cart-item-name{font-weight:600;font-size:14.5px;margin-bottom:2px;}
   .cart-item-cat{font-size:11px;color:var(--ink-soft);margin-bottom:10px;}
   .cart-item-pricing{
@@ -639,8 +639,8 @@
     display:inline-flex;align-items:center;
     align-self:flex-start;
     min-height:44px;
-    margin-top:2px;margin-inline-start:-2px;
-    padding:0 2px;
+    margin-top:-8px;margin-inline-start:-10px;
+    padding:10px 8px;
     font-size:14px;
     color:#726e68;
     text-decoration:underline;
@@ -858,7 +858,7 @@
     transition:transform .35s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
   }
   .account-overlay.active .account-panel{transform:scale(1) translateY(0);opacity:1;}
-  .account-close{position:absolute;top:12px;left:12px;width:32px;height:32px;}
+  .account-close{position:absolute;top:8px;left:8px;width:40px;height:40px;}
   .account-header{text-align:center;margin-bottom:26px;}
   .account-header .stamp{width:26px;height:26px;color:var(--gold);display:inline-flex;margin-bottom:12px;}
   .account-header h3{font-size:20px;margin-bottom:6px;}
@@ -963,7 +963,7 @@
     .card-name{font-size:20px;font-weight:600;}
     .card-desc{font-size:13px;line-height:1.5;}
     .price{font-size:20px;}
-    .add-btn{width:36px;height:36px;}
+    .add-btn{width:40px;height:40px;}
 
     /* Categories: text-only chips at desktop, circles removed */
     .cat-scroll{overflow:visible;flex-wrap:wrap;justify-content:center;margin:0;padding:6px 0 10px;gap:14px;}
@@ -1268,24 +1268,24 @@
         <div>
           <h4 data-i18n="footer.company">החברה</h4>
           <ul>
-            <li><a href="#" data-i18n="footer.about">אודות בראשית יודאיקה</a></li>
-            <li><a href="#" data-i18n="footer.contact">צור קשר</a></li>
-            <li><a href="#" data-i18n="footer.shipping">משלוחים</a></li>
+            <li><a href="#" class="js-coming-soon" data-i18n="footer.about">אודות בראשית יודאיקה</a></li>
+            <li><a href="#" class="js-coming-soon" data-i18n="footer.contact">צור קשר</a></li>
+            <li><a href="#" class="js-coming-soon" data-i18n="footer.shipping">משלוחים</a></li>
           </ul>
         </div>
         <div>
           <h4 data-i18n="footer.customerService">שירות לקוחות</h4>
           <ul>
-            <li><a href="#" data-i18n="footer.returns">מדיניות החזרות</a></li>
-            <li><a href="#" data-i18n="footer.privacy">פרטיות</a></li>
-            <li><a href="#" data-i18n="footer.terms">תנאי שימוש</a></li>
+            <li><a href="#" class="js-coming-soon" data-i18n="footer.returns">מדיניות החזרות</a></li>
+            <li><a href="#" class="js-coming-soon" data-i18n="footer.privacy">פרטיות</a></li>
+            <li><a href="#" class="js-coming-soon" data-i18n="footer.terms">תנאי שימוש</a></li>
           </ul>
         </div>
       </div>
       <div class="social-row">
-        <a href="#" aria-label="אינסטגרם" data-i18n-aria="footer.instagram"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" stroke="none"/></svg></a>
-        <a href="#" aria-label="פייסבוק" data-i18n-aria="footer.facebook"><svg viewBox="0 0 24 24"><path d="M14 9h3V6h-3a3 3 0 0 0-3 3v2H8v3h3v6h3v-6h3l1-3h-4V9a1 1 0 0 1 1-1Z"/></svg></a>
-        <a href="#" aria-label="פינטרסט" data-i18n-aria="footer.pinterest"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 17c1-3.5 1.5-5.5 1.5-5.5m3.5-1.7a2.5 2.5 0 1 1-4.6 1.9"/></svg></a>
+        <a href="#" class="js-coming-soon" aria-label="אינסטגרם" data-i18n-aria="footer.instagram"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" stroke="none"/></svg></a>
+        <a href="#" class="js-coming-soon" aria-label="פייסבוק" data-i18n-aria="footer.facebook"><svg viewBox="0 0 24 24"><path d="M14 9h3V6h-3a3 3 0 0 0-3 3v2H8v3h3v6h3v-6h3l1-3h-4V9a1 1 0 0 1 1-1Z"/></svg></a>
+        <a href="#" class="js-coming-soon" aria-label="פינטרסט" data-i18n-aria="footer.pinterest"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 17c1-3.5 1.5-5.5 1.5-5.5m3.5-1.7a2.5 2.5 0 1 1-4.6 1.9"/></svg></a>
       </div>
       <div class="foot-bottom">
         <span>© 2026 בראשית יודאיקה</span>
@@ -1705,7 +1705,7 @@ const I18N = {
     'confirm.backToStore':'חזרה לחנות',
     'account.title':'אזור אישי', 'account.loginSubtitle':'התחברי כדי לצפות בהזמנות ולשמור פריטים מועדפים',
     'account.email':'דוא"ל', 'account.password':'סיסמה', 'account.forgotPassword':'שכחתי סיסמה',
-    'account.forgotPasswordToast':'שחזור סיסמה – בקרוב', 'account.login':'התחברות',
+    'account.forgotPasswordToast':'שחזור סיסמה – בקרוב', 'account.login':'התחברות', 'common.comingSoon':'בקרוב!',
     'account.noAccount':'אין לך חשבון?', 'account.register':'הרשמה', 'account.registerSubtitle':'יצירת חשבון חדש בבראשית יודאיקה',
     'account.fullName':'שם מלא', 'account.phone':'טלפון', 'account.haveAccount':'כבר יש לך חשבון?', 'account.logout':'התנתקות',
     'stock.out':'אזל מהמלאי', 'stock.last':'פריט אחרון', 'stock.low':'פריטים אחרונים',
@@ -1743,7 +1743,7 @@ const I18N = {
     'confirm.backToStore':'Back to Store',
     'account.title':'My Account', 'account.loginSubtitle':'Log in to view your orders and save favorite items',
     'account.email':'Email', 'account.password':'Password', 'account.forgotPassword':'Forgot password',
-    'account.forgotPasswordToast':'Password recovery – coming soon', 'account.login':'Log In',
+    'account.forgotPasswordToast':'Password recovery – coming soon', 'account.login':'Log In', 'common.comingSoon':'Coming soon!',
     'account.noAccount':"Don't have an account?", 'account.register':'Sign Up', 'account.registerSubtitle':'Create a new Bereshit Judaica account',
     'account.fullName':'Full Name', 'account.phone':'Phone', 'account.haveAccount':'Already have an account?', 'account.logout':'Log Out',
     'stock.out':'Out of Stock', 'stock.last':'Last Item', 'stock.low':'Limited Stock',
@@ -2446,6 +2446,9 @@ document.getElementById('accountOverlay').addEventListener('click', (e) => {
   if(e.target.id === 'accountOverlay') closeAccount();
 });
 
+document.querySelectorAll('.js-coming-soon').forEach(el=>{
+  el.addEventListener('click', (e)=>{ e.preventDefault(); showToast(t('common.comingSoon')); });
+});
 document.getElementById('showRegisterLink').addEventListener('click', (e)=>{
   e.preventDefault();
   document.getElementById('accountLoginState').style.display = 'none';
