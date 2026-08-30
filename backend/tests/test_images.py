@@ -233,6 +233,53 @@ def test_process_full_flow_fetches_stages_and_uploads_then_cleans_up(admin_clien
     assert delete_calls == [f"{TEST_BLOB_URL_PREFIX}/{VALID_STAGING_PATHNAME}"]
 
 
+# ---------------------------------------------------------------------
+# Regression: production incident — a malformed staging-blob cleanup
+# delete() must never mask an otherwise-successful upload. Before this
+# fix, a failure here (exactly what "Vercel Blob delete failed (400):
+# Some urls are malformed" was) propagated out of process_staged_image
+# and made the *entire* upload fail even though the real product
+# image/thumbnail had already been created successfully.
+# ---------------------------------------------------------------------
+
+def test_process_succeeds_even_when_staging_cleanup_delete_fails(admin_client, monkeypatch):
+    from backend.services import images_service
+
+    def fake_fetch_bytes(key):
+        return make_image_bytes(400, 400, "PNG")
+
+    def fake_upload_bytes(data, key, content_type):
+        return f"{TEST_BLOB_URL_PREFIX}/{key}"
+
+    def failing_delete(url):
+        raise RuntimeError("Vercel Blob delete failed (400): {\"error\":{\"code\":\"bad_request\",\"message\":\"Some urls are malformed\"}}")
+
+    monkeypatch.setattr(images_service.storage, "is_configured", lambda: True)
+    monkeypatch.setattr(images_service.storage, "fetch_bytes", fake_fetch_bytes)
+    monkeypatch.setattr(images_service.storage, "public_url_for_key", lambda key: f"{TEST_BLOB_URL_PREFIX}/{key}")
+    monkeypatch.setattr(images_service.storage, "upload_bytes", fake_upload_bytes)
+    monkeypatch.setattr(images_service.storage, "delete_object", failing_delete)
+
+    res = admin_client.post("/api/images/process", json={"pathname": VALID_STAGING_PATHNAME})
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()
+    assert body["url"].startswith(f"{TEST_BLOB_URL_PREFIX}/products/")
+    assert body["thumbnailUrl"].startswith(f"{TEST_BLOB_URL_PREFIX}/products/thumbs/")
+
+
+def test_process_still_rejects_invalid_image_when_cleanup_delete_also_fails(admin_client, monkeypatch):
+    """Cleanup is best-effort in both directions: a delete failure must
+    not turn a genuine validation failure into a fake success either."""
+    from backend.services import images_service
+
+    monkeypatch.setattr(images_service.storage, "fetch_bytes", lambda key: b"not a real image")
+    monkeypatch.setattr(images_service.storage, "public_url_for_key", lambda key: f"{TEST_BLOB_URL_PREFIX}/{key}")
+    monkeypatch.setattr(images_service.storage, "delete_object", lambda url: (_ for _ in ()).throw(RuntimeError("delete also failed")))
+
+    res = admin_client.post("/api/images/process", json={"pathname": VALID_STAGING_PATHNAME})
+    assert res.status_code == 400
+
+
 def test_delete_requires_admin_auth(client):
     res = client.delete("/api/images", json={"url": "https://example.com/products/x.webp"})
     assert res.status_code == 401
@@ -375,6 +422,48 @@ def test_storage_never_falls_back_to_the_old_unprefixed_store_id(monkeypatch):
     monkeypatch.delenv("BERESHIT_IMAGES_STORE_ID", raising=False)
     monkeypatch.setenv("BLOB_STORE_ID", "oldstoreid123")
     assert storage.public_url_for_key("products/x.webp") is None
+
+
+# ---------------------------------------------------------------------
+# Regression: production incident — "Vercel Blob delete failed (400):
+# Some urls are malformed". Root cause: Vercel provisions
+# BERESHIT_IMAGES_STORE_ID WITH a "store_" prefix (confirmed by reading
+# @vercel/blob's own compiled source, which strips this exact prefix
+# before building any hostname), but this module built the public CDN
+# URL directly from the raw env var — producing a hostname with an
+# underscore in it (invalid per RFC 1035), which Vercel Blob's delete API
+# correctly rejected as malformed.
+# ---------------------------------------------------------------------
+
+def test_store_id_strips_the_store_prefix_vercel_actually_provisions(monkeypatch):
+    from backend.images import storage
+    monkeypatch.setenv("BERESHIT_IMAGES_STORE_ID", "store_abc123xyz")
+    assert storage._store_id() == "abc123xyz"
+    assert storage.public_url_for_key("staging/x.upload") == "https://abc123xyz.public.blob.vercel-storage.com/staging/x.upload"
+
+
+def test_store_id_left_unchanged_when_it_has_no_store_prefix(monkeypatch):
+    from backend.images import storage
+    monkeypatch.setenv("BERESHIT_IMAGES_STORE_ID", "abc123xyz")
+    assert storage._store_id() == "abc123xyz"
+
+
+def test_key_from_url_rejects_a_hostname_containing_an_underscore():
+    """The exact shape of the bug: a URL that ends with the right suffix
+    but whose host has a "store_..." prefix baked in is not a real,
+    resolvable hostname (underscores aren't legal in a DNS label) and
+    must never be treated as one of ours, regardless of the suffix
+    match — this is what stops a malformed URL from ever reaching
+    Vercel Blob's delete API in the first place."""
+    from backend.images import storage
+    bad = "https://store_abc123xyz.public.blob.vercel-storage.com/products/x.webp"
+    assert storage.key_from_url(bad) is None
+
+
+def test_key_from_url_still_accepts_a_normal_well_formed_url():
+    from backend.images import storage
+    good = f"{TEST_BLOB_URL_PREFIX}/products/x.webp"
+    assert storage.key_from_url(good) == "products/x.webp"
 
 
 class _FakeResponse:

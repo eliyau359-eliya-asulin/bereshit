@@ -24,6 +24,7 @@ route that needs storage returns a clear 503 rather than silently
 pretending to succeed.
 """
 import os
+import re
 import uuid
 from urllib.parse import unquote, urlparse
 
@@ -39,6 +40,16 @@ _REQUEST_TIMEOUT = 20
 # to recognize "one of ours" without needing a separately configured
 # public base URL the way the old S3 code did.
 _PUBLIC_BLOB_HOST_SUFFIX = ".public.blob.vercel-storage.com"
+# A real hostname: dot-separated labels of letters/digits/hyphens only
+# (RFC 1035) — never underscores or anything else. Belt-and-suspenders
+# against ever handing Vercel Blob's delete API a URL whose host is
+# malformed for any reason (a bad env var, a future bug in how a URL
+# gets built, ...): if the host doesn't even look like a real hostname,
+# it's rejected here before it can ever reach that API and fail there
+# with an opaque "malformed" error instead.
+_VALID_HOSTNAME_RE = re.compile(
+    r"^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*$"
+)
 
 
 def _token():
@@ -49,8 +60,16 @@ def _store_id():
     # Vercel adds this automatically once bereshit-images-public is
     # "Connected to Project" (Storage tab -> store -> Projects -> Connect
     # to Project) — separate from just adding the read-write token to the
-    # project's env vars.
-    return os.environ.get("BERESHIT_IMAGES_STORE_ID", "").strip()
+    # project's env vars. Vercel provisions the value WITH a "store_"
+    # prefix (e.g. "store_abc123xyz"); the public CDN hostname uses only
+    # the bare id after that prefix (confirmed by reading @vercel/blob's
+    # own compiled source: it strips this exact prefix in a helper it
+    # calls normalizeStoreId before building any URL). Passing the raw
+    # "store_..." value straight into a hostname produces an invalid host
+    # (underscores aren't a legal DNS label character), which is what
+    # caused Vercel Blob's delete API to reject it as malformed.
+    raw = os.environ.get("BERESHIT_IMAGES_STORE_ID", "").strip()
+    return raw[len("store_"):] if raw.startswith("store_") else raw
 
 
 def is_configured():
@@ -153,15 +172,22 @@ def key_from_url(url):
     """Recovers the storage key (the Blob `pathname`) from a URL
     previously returned by upload_bytes. Returns None for a URL that
     isn't one of ours (a legacy/admin-pasted external link, an imported
-    ImageURL, a locally-embedded placeholder, or a malformed value), so
-    callers can skip deletion instead of trying to delete something that
-    was never in this store."""
-    if not url:
+    ImageURL, a locally-embedded placeholder, a malformed value, or a
+    relative/empty/None one), so callers can skip deletion instead of
+    trying to delete something that was never in this store — and so
+    Vercel Blob's delete API is never handed a URL it would itself
+    reject as malformed."""
+    if not url or not isinstance(url, str):
         return None
     try:
         parsed = urlparse(url)
     except ValueError:
         return None
-    if parsed.scheme != "https" or not parsed.netloc.endswith(_PUBLIC_BLOB_HOST_SUFFIX):
+    if parsed.scheme != "https":
         return None
-    return unquote(parsed.path.lstrip("/")) or None
+    if not parsed.netloc or not _VALID_HOSTNAME_RE.match(parsed.netloc):
+        return None
+    if not parsed.netloc.endswith(_PUBLIC_BLOB_HOST_SUFFIX):
+        return None
+    key = unquote(parsed.path.lstrip("/"))
+    return key or None

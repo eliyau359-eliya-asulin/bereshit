@@ -62,23 +62,36 @@ def process_staged_image(pathname):
     signed URL minted by api/blob-upload-token.js, bypassing this server
     entirely for that transfer — which is what keeps a large photo from
     ever hitting Vercel's function body-size limit. This step is what
-    makes the server authoritative again: it fetches those raw bytes back,
-    runs them through the exact same validation/resize/WebP pipeline as
-    any other upload, and — whether that succeeds or fails — always
-    deletes the temporary staging blob, so nothing unvalidated is ever
-    left sitting in the store."""
+    makes the server authoritative again: it fetches those raw bytes back
+    and runs them through the exact same validation/resize/WebP pipeline
+    as any other upload.
+
+    Cleaning up the temporary staging blob afterward is deliberately
+    best-effort and never allowed to affect the outcome, in either
+    direction: it's still attempted whether the upload above succeeded
+    or failed (nothing unvalidated should linger in the store just
+    because the file itself was bad), but a cleanup failure — a
+    transient Blob error, an unexpected URL shape — must never mask a
+    real result: not a successful upload's return value, and not a real
+    validation/processing error either. Deleting a leftover temp file is
+    a cleanliness concern, never a reason to change what actually
+    happened above."""
     if not STAGING_PATHNAME_RE.match(pathname or ""):
         raise ValidationError("נתיב העלאה זמני לא תקין")
 
     try:
         raw_bytes = storage.fetch_bytes(pathname)
         processed = validate_and_process(raw_bytes)
+        result = _upload_processed(processed)
     finally:
-        staged_url = storage.public_url_for_key(pathname)
-        if staged_url:
-            storage.delete_object(staged_url)
+        try:
+            staged_url = storage.public_url_for_key(pathname)
+            if staged_url:
+                storage.delete_object(staged_url)
+        except Exception:
+            pass  # best-effort cleanup only — see docstring above
 
-    return _upload_processed(processed)
+    return result
 
 
 def delete_product_image(url):
