@@ -478,7 +478,7 @@ class _FakeResponse:
 
 def test_upload_bytes_puts_to_blob_api_and_returns_url(monkeypatch):
     from backend.images import storage
-    monkeypatch.setattr(storage, "_token", lambda: "fake-rw-token")
+    monkeypatch.setattr(storage, "_token", lambda: "vercel_blob_rw_teststoreid456_secretpart")
 
     captured = {}
 
@@ -494,11 +494,27 @@ def test_upload_bytes_puts_to_blob_api_and_returns_url(monkeypatch):
     result_url = storage.upload_bytes(b"fake-webp-bytes", "products/xyz.webp", "image/webp")
 
     assert result_url == f"{TEST_BLOB_URL_PREFIX}/products/xyz.webp"
-    assert captured["headers"]["authorization"] == "Bearer fake-rw-token"
-    assert captured["headers"]["access"] == "public"
+    assert captured["headers"]["authorization"] == "Bearer vercel_blob_rw_teststoreid456_secretpart"
+    # Regression: an earlier, outdated header name ("access" instead of
+    # "x-vercel-blob-access") and API version ("7" instead of "12") were
+    # silently accepted as a well-formed request shape locally (nothing
+    # here calls the real API), but the real, current Blob API rejected
+    # it in production with "Invalid pathname" — verified against
+    # @vercel/blob@2.8.0's actual compiled source, not guessed.
+    assert captured["headers"]["x-vercel-blob-access"] == "public"
+    assert "access" not in captured["headers"]
+    assert captured["headers"]["x-api-version"] == "12"
+    assert captured["headers"]["x-vercel-blob-store-id"] == "teststoreid456"
     assert captured["headers"]["x-content-type"] == "image/webp"
     # Never leak the token in the URL/params — only in the auth header.
-    assert "fake-rw-token" not in str(captured["params"])
+    assert "secretpart" not in str(captured["params"])
+
+
+def test_store_id_from_token_extracts_the_fourth_underscore_segment():
+    from backend.images import storage
+    assert storage._store_id_from_token("vercel_blob_rw_abc123_therest_of_the_secret") == "abc123"
+    assert storage._store_id_from_token("") == ""
+    assert storage._store_id_from_token("not-enough-underscore-segments") == ""
 
 
 def test_upload_bytes_raises_runtime_error_on_non_200(monkeypatch):
@@ -514,7 +530,7 @@ def test_upload_bytes_raises_runtime_error_on_non_200(monkeypatch):
 
 def test_delete_object_calls_blob_delete_endpoint_for_our_own_url(monkeypatch):
     from backend.images import storage
-    monkeypatch.setattr(storage, "_token", lambda: "fake-rw-token")
+    monkeypatch.setattr(storage, "_token", lambda: "vercel_blob_rw_teststoreid456_secretpart")
 
     captured = {}
 
@@ -530,6 +546,8 @@ def test_delete_object_calls_blob_delete_endpoint_for_our_own_url(monkeypatch):
 
     assert captured["url"] == f"{storage._BLOB_API_BASE}/delete"
     assert captured["json"] == {"urls": [f"{TEST_BLOB_URL_PREFIX}/products/xyz.webp"]}
+    assert captured["headers"]["x-api-version"] == "12"
+    assert captured["headers"]["x-vercel-blob-store-id"] == "teststoreid456"
 
 
 def test_delete_object_never_calls_blob_api_for_external_url(monkeypatch):

@@ -32,8 +32,12 @@ import requests
 
 _BLOB_API_BASE = "https://blob.vercel-storage.com"
 # Vercel's Blob REST API is versioned via this header; bump if Vercel
-# advances the required version and old uploads start failing.
-_API_VERSION = "7"
+# advances the required version and old uploads start failing. Verified
+# against the currently-pinned @vercel/blob@2.8.0's own compiled source
+# (its BLOB_API_VERSION constant) rather than guessed — an earlier,
+# out-of-date value here (paired with the wrong access-mode header name
+# below) is what caused a real "Invalid pathname" rejection in production.
+_API_VERSION = "12"
 _REQUEST_TIMEOUT = 20
 # Every object in a public Blob store is served from this fixed domain
 # suffix (the store-id subdomain varies, the suffix never does) — used
@@ -70,6 +74,22 @@ def _store_id():
     # caused Vercel Blob's delete API to reject it as malformed.
     raw = os.environ.get("BERESHIT_IMAGES_STORE_ID", "").strip()
     return raw[len("store_"):] if raw.startswith("store_") else raw
+
+
+def _store_id_from_token(token):
+    """The current Blob API requires an explicit x-vercel-blob-store-id
+    header on every authenticated control-plane request (upload/delete) —
+    confirmed the same way as everything else in this module, by reading
+    @vercel/blob's compiled source (its resolveBlobAuth/
+    parseStoreIdFromReadWriteToken). It derives that id from the
+    read-write token itself (format: vercel_blob_rw_<storeId>_<secret>,
+    so index 3 after splitting on "_"), not from BERESHIT_IMAGES_STORE_ID
+    — deliberately, so this keeps working even if that separate env var
+    were ever missing or stale."""
+    if not token:
+        return ""
+    parts = token.split("_")
+    return parts[3] if len(parts) > 3 else ""
 
 
 def is_configured():
@@ -121,10 +141,13 @@ def upload_bytes(data, key, content_type):
     headers = {
         "authorization": f"Bearer {_token()}",
         "x-api-version": _API_VERSION,
+        "x-vercel-blob-store-id": _store_id_from_token(_token()),
         # Required by the Blob API on every write; must match the access
         # mode the target store was actually created with (see the module
-        # docstring) — a private store rejects this.
-        "access": "public",
+        # docstring) — a private store rejects this. Header name (not the
+        # more obvious plain "access") verified against the current SDK's
+        # compiled source.
+        "x-vercel-blob-access": "public",
         "x-content-type": content_type,
         # `key` is already an unguessable uuid4 (see new_key) — no random
         # suffix needed, which also keeps the returned URL's path exactly
@@ -158,7 +181,11 @@ def delete_object(url):
     try:
         resp = requests.post(
             f"{_BLOB_API_BASE}/delete",
-            headers={"authorization": f"Bearer {_token()}", "x-api-version": _API_VERSION},
+            headers={
+                "authorization": f"Bearer {_token()}",
+                "x-api-version": _API_VERSION,
+                "x-vercel-blob-store-id": _store_id_from_token(_token()),
+            },
             json={"urls": [url]},
             timeout=_REQUEST_TIMEOUT,
         )
