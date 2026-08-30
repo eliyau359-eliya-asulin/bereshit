@@ -230,7 +230,7 @@
         <td class="text-faint">${fmtDate(o.date)}</td>
         <td class="num">${fmt(o.total)}</td>
         <td><span class="status-badge ${statusBadgeClass(o.status)}">${o.status}</span></td>
-        <td class="cell-actions"><button class="icon-action" data-view-order="${o.id}" title="צפייה"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
+        <td class="cell-actions"><button class="icon-action" data-view-order="${o.id}" title="צפייה" aria-label="צפייה בהזמנה"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
       </tr>
     `).join('');
     $('#recentOrdersBody').innerHTML = rows;
@@ -261,10 +261,11 @@
     `).join('');
   }
 
-  function emptyState(title, desc, iconSvg){
+  function emptyState(title, desc, iconSvg, actionHtml){
     return `<div class="empty-state">
       <div class="stamp-wrap"><svg viewBox="0 0 24 24">${iconSvg || '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/>'}</svg></div>
       <h4>${title}</h4><p>${desc}</p>
+      ${actionHtml || ''}
     </div>`;
   }
 
@@ -311,8 +312,8 @@
       <td data-label="מלאי" class="num">${p.stock<=p.threshold ? `<span style="color:var(--danger);font-weight:700">${p.stock}</span>` : p.stock}</td>
       <td data-label="סטטוס"><span class="status-badge ${statusCls(p.status)}">${statusLabel(p.status)}</span></td>
       <td class="cell-actions">
-        <button class="icon-action" data-edit-product="${p.id}" title="עריכה"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16v4Z" stroke-linejoin="round"/></svg></button>
-        <button class="icon-action danger" data-delete-product="${p.id}" title="מחיקה"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg></button>
+        <button class="icon-action" data-edit-product="${p.id}" title="עריכה" aria-label="עריכת מוצר"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16v4Z" stroke-linejoin="round"/></svg></button>
+        <button class="icon-action danger" data-delete-product="${p.id}" title="מחיקה" aria-label="מחיקת מוצר"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg></button>
       </td>
     </tr>`;
   }
@@ -325,8 +326,8 @@
         <div class="pgrid-foot">
           <span class="pgrid-price">${fmt(p.price)}</span>
           <div class="cell-actions">
-            <button class="icon-action" data-edit-product="${p.id}"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16v4Z" stroke-linejoin="round"/></svg></button>
-            <button class="icon-action danger" data-delete-product="${p.id}"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg></button>
+            <button class="icon-action" data-edit-product="${p.id}" title="עריכה" aria-label="עריכת מוצר"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16v4Z" stroke-linejoin="round"/></svg></button>
+            <button class="icon-action danger" data-delete-product="${p.id}" title="מחיקה" aria-label="מחיקת מוצר"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg></button>
           </div>
         </div>
       </div>
@@ -803,8 +804,8 @@
         <td class="num">${c.count} מוצרים</td>
         <td><span class="status-badge ${c.status==='active'?'success':'neutral'}">${c.status==='active'?'פעיל':'לא פעיל'}</span></td>
         <td class="cell-actions">
-          <button class="icon-action" data-edit-cat="${escAttr(c.key)}" title="עריכה"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16v4Z" stroke-linejoin="round"/></svg></button>
-          <button class="icon-action danger" data-del-cat="${escAttr(c.key)}" title="מחיקה"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg></button>
+          <button class="icon-action" data-edit-cat="${escAttr(c.key)}" title="עריכה" aria-label="עריכת קטגוריה"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16v4Z" stroke-linejoin="round"/></svg></button>
+          <button class="icon-action danger" data-del-cat="${escAttr(c.key)}" title="מחיקה" aria-label="מחיקת קטגוריה"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg></button>
         </td>
       </tr>
     `).join('');
@@ -1623,13 +1624,40 @@
   }
 
   /* ================= Init ================= */
+  function skeletonBlock(height){ return `<div class="skeleton" style="height:${height}px;border-radius:var(--radius-m);"></div>`; }
+  function skeletonRows(n){ return Array.from({length:n}).map(()=>`<tr><td colspan="99">${skeletonBlock(16)}</td></tr>`).join(''); }
+  function renderBootSkeletons(){
+    const kpi = $('#kpiGrid'); if(kpi) kpi.innerHTML = Array.from({length:4}).map(()=>`<div class="kpi-card">${skeletonBlock(70)}</div>`).join('');
+    const recent = $('#recentOrdersBody'); if(recent) recent.innerHTML = skeletonRows(4);
+    const best = $('#bestSellersBody'); if(best) best.innerHTML = skeletonRows(4);
+    const low = $('#lowStockList'); if(low) low.innerHTML = Array.from({length:3}).map(()=>skeletonBlock(56)).join('<div style="height:8px;"></div>');
+    const pt = $('#productTableWrap'); if(pt) pt.innerHTML = skeletonBlock(320);
+    const ot = $('#orderTableWrap'); if(ot) ot.innerHTML = skeletonBlock(320);
+    const ct = $('#customerTableWrap'); if(ct) ct.innerHTML = skeletonBlock(320);
+  }
+  function renderBootFailure(){
+    $$('.page').forEach(p=>p.classList.toggle('active', p.dataset.page==='dashboard'));
+    const kpi = $('#kpiGrid');
+    if(!kpi) return;
+    kpi.innerHTML = emptyState(
+      'לא ניתן לטעון את נתוני הפאנל',
+      'ודאו שיש חיבור לשרת ה-API ונסו שוב.',
+      '<path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 2.6 17.5a1.8 1.8 0 0 0 1.6 2.7h15.6a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z"/>',
+      '<button class="btn btn-primary btn-sm" id="bootRetryBtn">נסה שוב</button>'
+    );
+    const es = kpi.querySelector('.empty-state');
+    if(es) es.style.gridColumn = '1/-1';
+    document.getElementById('bootRetryBtn')?.addEventListener('click', bootDashboard);
+  }
   async function bootDashboard(){
+    renderBootSkeletons();
     try{
       await loadAdminData();
       await loadAdminUsersList();
     }catch(err){
       console.error('[Bereshit Admin] Failed to load data from the API:', err);
-      toast('לא ניתן להתחבר לשרת ה-API. ודא שה-Flask server רץ ורענן את הדף.');
+      toast('לא ניתן להתחבר לשרת ה-API. ודא שה-Flask server רץ.');
+      renderBootFailure();
       return;
     }
 

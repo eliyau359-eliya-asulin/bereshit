@@ -124,9 +124,9 @@
       <div class="topbar-right">
         <div class="topbar-search">
           <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" id="globalSearch" placeholder="חיפוש מוצרים, הזמנות...">
+          <input type="text" id="globalSearch" placeholder="חיפוש מוצרים, הזמנות..." aria-label="חיפוש כללי">
         </div>
-        <button class="topbar-profile" id="profileBtn" data-nav-inline="settings" title="הגדרות">
+        <button class="topbar-profile" id="profileBtn" data-nav-inline="settings" title="הגדרות" aria-label="הגדרות">
           <div class="admin-avatar" id="topbarAvatarInitials"></div>
           <div>
             <div class="topbar-profile-name" id="topbarAdminName"></div>
@@ -222,7 +222,7 @@
           <div class="filters-bar">
             <div class="search-box">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-              <input type="text" id="productSearch" placeholder="חיפוש לפי שם מוצר או מק&quot;ט">
+              <input type="text" id="productSearch" placeholder="חיפוש לפי שם מוצר או מק&quot;ט" aria-label="חיפוש מוצרים">
             </div>
             <select class="select-field" id="productCatFilter"></select>
             <select class="select-field" id="productStatusFilter">
@@ -249,7 +249,7 @@
           <div class="filters-bar">
             <div class="search-box">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-              <input type="text" id="orderSearch" placeholder="חיפוש לפי מספר הזמנה או לקוח">
+              <input type="text" id="orderSearch" placeholder="חיפוש לפי מספר הזמנה או לקוח" aria-label="חיפוש הזמנות">
             </div>
             <select class="select-field" id="orderStatusFilter">
               <option value="">כל הסטטוסים</option>
@@ -279,7 +279,7 @@
           <div class="filters-bar">
             <div class="search-box">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-              <input type="text" id="customerSearch" placeholder="חיפוש לפי שם או אימייל">
+              <input type="text" id="customerSearch" placeholder="חיפוש לפי שם או אימייל" aria-label="חיפוש לקוחות">
             </div>
             <div class="filters-spacer"></div>
             <span class="results-count" id="customerResultsCount"></span>
@@ -312,7 +312,7 @@
           <div class="filters-bar">
             <div class="search-box">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-              <input type="text" id="inventorySearch" placeholder="חיפוש לפי שם או מק&quot;ט">
+              <input type="text" id="inventorySearch" placeholder="חיפוש לפי שם או מק&quot;ט" aria-label="חיפוש מלאי">
             </div>
             <select class="select-field" id="inventoryStatusFilter">
               <option value="">כל הסטטוסים</option>
@@ -346,7 +346,7 @@
         <div class="page-head"><div><h2>סריקת מוצר</h2><p>עדכון מלאי מהיר בסריקת ברקוד או הזנה ידנית — אותה מערכת מלאי ואותו יומן שינויים כמו מסך המלאי</p></div></div>
         <div class="panel scanner-panel">
           <form class="scanner-manual-row" id="scanManualForm">
-            <input class="field-input" id="scanCodeInput" placeholder='הזנת ברקוד או מק"ט' autocomplete="off" inputmode="text">
+            <input class="field-input" id="scanCodeInput" placeholder='הזנת ברקוד או מק"ט' autocomplete="off" inputmode="text" aria-label="הזנת ברקוד או מק&quot;ט">
             <button class="btn btn-primary" type="submit">חיפוש</button>
           </form>
           <div class="scanner-camera-row">
@@ -427,12 +427,12 @@
               <div class="panel-head"><h3>פרטי חנות</h3></div>
               <div class="panel-body">
                 <div class="form-grid">
-                  <div class="form-field"><label>שם החנות</label><input class="field-input" id="storeInfoName"></div>
-                  <div class="form-field"><label>אימייל ליצירת קשר</label><input class="field-input" id="storeInfoEmail"></div>
-                  <div class="form-field"><label>טלפון</label><input class="field-input" id="storeInfoPhone"></div>
-                  <div class="form-field"><label>מטבע</label><select class="field-select"><option>שקל חדש (₪)</option></select></div>
-                  <div class="form-field full"><label>כתובת</label><input class="field-input" id="storeInfoAddress"></div>
-                  <div class="form-field full"><label>תיאור החנות</label><textarea class="field-textarea" id="storeInfoDesc"></textarea></div>
+                  <div class="form-field"><label for="storeInfoName">שם החנות</label><input class="field-input" id="storeInfoName"></div>
+                  <div class="form-field"><label for="storeInfoEmail">אימייל ליצירת קשר</label><input class="field-input" id="storeInfoEmail"></div>
+                  <div class="form-field"><label for="storeInfoPhone">טלפון</label><input class="field-input" id="storeInfoPhone"></div>
+                  <div class="form-field"><label for="storeInfoCurrency">מטבע</label><select class="field-select" id="storeInfoCurrency"><option>שקל חדש (₪)</option></select></div>
+                  <div class="form-field full"><label for="storeInfoAddress">כתובת</label><input class="field-input" id="storeInfoAddress"></div>
+                  <div class="form-field full"><label for="storeInfoDesc">תיאור החנות</label><textarea class="field-textarea" id="storeInfoDesc"></textarea></div>
                 </div>
                 <div class="modal-foot" style="padding:20px 0 0;border-top:none;justify-content:flex-start;"><button class="btn btn-primary" id="saveStoreInfoBtn">שמירת שינויים</button></div>
               </div>
@@ -532,10 +532,10 @@
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-field full"><label>שם *</label><input class="field-input" id="auName" placeholder="שם מלא"></div>
-        <div class="form-field full"><label>אימייל *</label><input class="field-input" id="auEmail" type="email" placeholder="name@example.com"></div>
-        <div class="form-field full"><label>סיסמה זמנית *</label><input class="field-input" id="auPassword" type="password" placeholder="לפחות 8 תווים"></div>
-        <div class="form-field full"><label>תפקיד *</label>
+        <div class="form-field full"><label for="auName">שם *</label><input class="field-input" id="auName" placeholder="שם מלא"></div>
+        <div class="form-field full"><label for="auEmail">אימייל *</label><input class="field-input" id="auEmail" type="email" placeholder="name@example.com"></div>
+        <div class="form-field full"><label for="auPassword">סיסמה זמנית *</label><input class="field-input" id="auPassword" type="password" placeholder="לפחות 8 תווים"></div>
+        <div class="form-field full"><label for="auRole">תפקיד *</label>
           <select class="field-select" id="auRole">
             <option value="admin">מנהל</option>
             <option value="super_admin">מנהל-על</option>
@@ -572,17 +572,17 @@
       <div class="tab-panel active" data-tab="general">
         <div class="form-grid">
           <div class="form-field full">
-            <label>שם המוצר *</label>
+            <label for="pfName">שם המוצר *</label>
             <input class="field-input" id="pfName" placeholder="לדוגמה: חנוכיית כסף ירושלים">
             <span class="field-error" id="pfNameError"></span>
           </div>
           <div class="form-field">
-            <label>מק"ט (SKU) *</label>
+            <label for="pfSku">מק"ט (SKU) *</label>
             <input class="field-input" id="pfSku" placeholder="BJ-0000">
             <span class="field-error" id="pfSkuError"></span>
           </div>
-          <div class="form-field"><label>קטגוריה *</label><select class="field-select" id="pfCategory"></select></div>
-          <div class="form-field"><label>סטטוס מוצר</label>
+          <div class="form-field"><label for="pfCategory">קטגוריה *</label><select class="field-select" id="pfCategory"></select></div>
+          <div class="form-field"><label for="pfStatus">סטטוס מוצר</label>
             <select class="field-select" id="pfStatus">
               <option value="active">פעיל</option>
               <option value="draft">טיוטה</option>
@@ -594,16 +594,16 @@
       <div class="tab-panel" data-tab="pricing">
         <div class="form-grid">
           <div class="form-field">
-            <label>מחיר נוכחי *</label>
+            <label for="pfPrice">מחיר נוכחי *</label>
             <div class="field-prefix"><input class="field-input" id="pfPrice" type="number" min="0" step="1" placeholder="0"><span>₪</span></div>
             <span class="field-error" id="pfPriceError"></span>
           </div>
           <div class="form-field">
-            <label>מחיר קודם <span class="hint">(אופציונלי — להצגת מבצע)</span></label>
+            <label for="pfOldPrice">מחיר קודם <span class="hint">(אופציונלי — להצגת מבצע)</span></label>
             <div class="field-prefix"><input class="field-input" id="pfOldPrice" type="number" min="0" step="1" placeholder="ללא"><span>₪</span></div>
           </div>
           <div class="form-field full">
-            <label>תגית מבצע</label>
+            <label for="pfBadge">תגית מבצע</label>
             <select class="field-select" id="pfBadge">
               <option value="">ללא תגית</option>
               <option value="new">חדש</option>
@@ -615,12 +615,12 @@
       <div class="tab-panel" data-tab="inventory">
         <div class="form-grid">
           <div class="form-field">
-            <label>כמות במלאי *</label>
+            <label for="pfStock">כמות במלאי *</label>
             <input class="field-input" id="pfStock" type="number" min="0" step="1" placeholder="0">
             <span class="field-error" id="pfStockError"></span>
           </div>
           <div class="form-field">
-            <label>סף מלאי נמוך *</label>
+            <label for="pfThreshold">סף מלאי נמוך *</label>
             <input class="field-input" id="pfThreshold" type="number" min="0" step="1" value="5">
             <span class="field-error" id="pfThresholdError"></span>
           </div>
@@ -628,10 +628,10 @@
       </div>
       <div class="tab-panel" data-tab="description">
         <div class="form-grid">
-          <div class="form-field full"><label>תיאור קצר <span class="hint">(מוצג בכרטיס המוצר באתר)</span></label><input class="field-input" id="pfShort" placeholder="משפט אחד שמתאר את המוצר"></div>
-          <div class="form-field full"><label>תיאור מלא</label><textarea class="field-textarea" id="pfDesc" placeholder="תיאור מפורט, חומרים, מידות..."></textarea></div>
-          <div class="form-field"><label>חומר</label><input class="field-input" id="pfMaterial" placeholder="לדוגמה: כסף סטרלינג 925"></div>
-          <div class="form-field"><label>מידות</label><input class="field-input" id="pfDim" placeholder="לדוגמה: גובה 16 ס״מ"></div>
+          <div class="form-field full"><label for="pfShort">תיאור קצר <span class="hint">(מוצג בכרטיס המוצר באתר)</span></label><input class="field-input" id="pfShort" placeholder="משפט אחד שמתאר את המוצר"></div>
+          <div class="form-field full"><label for="pfDesc">תיאור מלא</label><textarea class="field-textarea" id="pfDesc" placeholder="תיאור מפורט, חומרים, מידות..."></textarea></div>
+          <div class="form-field"><label for="pfMaterial">חומר</label><input class="field-input" id="pfMaterial" placeholder="לדוגמה: כסף סטרלינג 925"></div>
+          <div class="form-field"><label for="pfDim">מידות</label><input class="field-input" id="pfDim" placeholder="לדוגמה: גובה 16 ס״מ"></div>
         </div>
       </div>
       <div class="tab-panel" data-tab="media">
@@ -713,7 +713,7 @@
     <h3 id="confirmTitle">אישור פעולה</h3>
     <p id="confirmDesc" style="white-space:pre-line;"></p>
     <div class="form-field hidden" id="confirmInputWrap" style="text-align:right;padding:0 24px;">
-      <label id="confirmInputLabel"></label>
+      <label id="confirmInputLabel" for="confirmInputField"></label>
       <input class="field-input" id="confirmInputField" type="number">
     </div>
     <div class="confirm-foot">
@@ -732,14 +732,14 @@
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-field"><label>מלאי נוכחי</label><input class="field-input" id="ivCurrentStock" disabled></div>
+        <div class="form-field"><label for="ivCurrentStock">מלאי נוכחי</label><input class="field-input" id="ivCurrentStock" disabled></div>
         <div class="form-field">
-          <label>מלאי חדש *</label>
+          <label for="ivNewStock">מלאי חדש *</label>
           <input class="field-input" id="ivNewStock" type="number" min="0" step="1">
           <span class="field-error" id="ivNewStockError"></span>
         </div>
         <div class="form-field full">
-          <label>סיבת העדכון <span class="hint">(אופציונלי)</span></label>
+          <label for="ivReason">סיבת העדכון <span class="hint">(אופציונלי)</span></label>
           <select class="field-select" id="ivReason">
             <option value="">בחר סיבה...</option>
             <option value="מכירה בחנות הפיזית">מכירה בחנות הפיזית</option>
@@ -767,16 +767,16 @@
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-field full">
-          <label>שם הקטגוריה (עברית) *</label>
+          <label for="cfLabel">שם הקטגוריה (עברית) *</label>
           <input class="field-input" id="cfLabel" placeholder="לדוגמה: כלי כסף">
           <span class="field-error" id="cfLabelError"></span>
         </div>
         <div class="form-field full">
-          <label>מפתח טכני (אנגלית) *<span class="hint"> — משמש לשיוך מוצרים, לא ניתן לשינוי לאחר היצירה</span></label>
+          <label for="cfKey">מפתח טכני (אנגלית) *<span class="hint"> — משמש לשיוך מוצרים, לא ניתן לשינוי לאחר היצירה</span></label>
           <input class="field-input" id="cfKey" placeholder="silverware">
           <span class="field-error" id="cfKeyError"></span>
         </div>
-        <div class="form-field"><label>סטטוס</label>
+        <div class="form-field"><label for="cfStatus">סטטוס</label>
           <select class="field-select" id="cfStatus">
             <option value="active">פעיל</option>
             <option value="inactive">לא פעיל</option>
@@ -801,30 +801,30 @@
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-field full">
-          <label>שם המבצע *</label>
+          <label for="promoName">שם המבצע *</label>
           <input class="field-input" id="promoName" placeholder="לדוגמה: מבצע חנוכה">
           <span class="field-error" id="promoNameError"></span>
         </div>
         <div class="form-field">
-          <label>קוד קופון *</label>
+          <label for="promoCode">קוד קופון *</label>
           <input class="field-input" id="promoCode" placeholder="CHANUKAH26" style="text-transform:uppercase;">
           <span class="field-error" id="promoCodeError"></span>
         </div>
         <div class="form-field">
-          <label>אחוז הנחה *<span class="hint"> (0 = משלוח חינם / ללא הנחת מחיר)</span></label>
+          <label for="promoDiscount">אחוז הנחה *<span class="hint"> (0 = משלוח חינם / ללא הנחת מחיר)</span></label>
           <input class="field-input" id="promoDiscount" type="number" min="0" max="100" step="1" placeholder="0">
           <span class="field-error" id="promoDiscountError"></span>
         </div>
         <div class="form-field">
-          <label>תאריך התחלה *</label>
+          <label for="promoStart">תאריך התחלה *</label>
           <input class="field-input" id="promoStart" type="date">
         </div>
         <div class="form-field">
-          <label>תאריך סיום *</label>
+          <label for="promoEnd">תאריך סיום *</label>
           <input class="field-input" id="promoEnd" type="date">
           <span class="field-error" id="promoDatesError"></span>
         </div>
-        <div class="form-field"><label>סטטוס</label>
+        <div class="form-field"><label for="promoStatus">סטטוס</label>
           <select class="field-select" id="promoStatus">
             <option value="active">פעיל</option>
             <option value="scheduled">מתוכנן</option>
