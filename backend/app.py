@@ -64,13 +64,24 @@ def create_app():
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(self), microphone=(), geolocation=(), payment=()"
+        # connect-src includes both https://blob.vercel-storage.com and
+        # https://vercel.com: the Admin's browser PUTs a product photo
+        # directly to Vercel Blob using a presigned URL (see
+        # api/blob-upload-token.js / shared/data-service.js), and the
+        # installed @vercel/blob SDK's presignUrl() targets its control
+        # API at https://vercel.com/api/blob by default (confirmed by
+        # inspecting the published package's compiled source — this
+        # isn't documented at the wire-protocol level). Without
+        # https://vercel.com here, that direct upload is silently blocked
+        # by this exact policy, which is what caused the "network error"
+        # production incident this comment is fixing.
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline'; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' https://*.public.blob.vercel-storage.com data:; "
-            "connect-src 'self' https://blob.vercel-storage.com; "
+            "connect-src 'self' https://blob.vercel-storage.com https://vercel.com; "
             "object-src 'none'; "
             "base-uri 'self'; "
             "form-action 'self'; "

@@ -52,13 +52,22 @@ def test_csp_allows_the_blob_image_host_and_google_fonts_only(client):
     assert "https://fonts.gstatic.com" in csp
 
 
-def test_csp_connect_src_allows_direct_blob_upload_host_and_nothing_else(client):
+def test_csp_connect_src_allows_exactly_the_hosts_the_direct_blob_upload_needs(client):
+    """The Admin's browser PUTs a product photo directly to Vercel Blob
+    using a presigned URL (see api/blob-upload-token.js). That URL's
+    origin comes from wherever @vercel/blob's presignUrl() actually
+    targets — confirmed by inspecting the pinned package's compiled
+    source (not documented at the wire-protocol level) to be
+    https://vercel.com/api/blob by default, not the CDN read host. A CSP
+    that only allowed the CDN host silently blocked every direct upload
+    with no server-side trace at all (the browser never sends the
+    request) — this is the regression test for that incident."""
     csp = client.get("/api/health").headers.get("Content-Security-Policy")
     connect_src = next(part for part in csp.split(";") if part.strip().startswith("connect-src"))
     assert "'self'" in connect_src
     assert "https://blob.vercel-storage.com" in connect_src
-    # Only the exact Blob control-plane host (the client-direct-upload PUT
-    # target) — never a wildcard, never an arbitrary third-party origin.
+    assert "https://vercel.com" in connect_src
+    # Bounded to these specific origins — never a wildcard.
     assert "*" not in connect_src
 
 

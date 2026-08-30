@@ -127,6 +127,15 @@
         body: file,
       });
     }catch(networkErr){
+      // A fetch() that never gets an HTTP response at all (as opposed to
+      // an HTTP error status, handled below) is almost always the
+      // browser refusing to even attempt the request — most commonly a
+      // Content-Security-Policy connect-src block against whatever host
+      // the presigned URL actually points at, or a CORS rejection.
+      // Logged (not shown to the admin) so this is diagnosable from
+      // DevTools without needing production server access: check the
+      // Console for a CSP violation naming this blocked URL's origin.
+      try{ console.error('[Bereshit] Direct-to-Blob upload PUT failed before any HTTP response', { origin: new URL(presignedUrl).origin, error: networkErr }); }catch(logErr){ /* noop */ }
       throw new Error('העלאת התמונה נכשלה (שגיאת רשת)');
     }
     if(!res.ok){
