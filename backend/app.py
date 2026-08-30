@@ -52,6 +52,32 @@ def create_app():
     app.register_blueprint(promotions_bp)
     app.register_blueprint(store_info_bp)
 
+    @app.after_request
+    def _security_headers(response):
+        # Mirrors vercel.json's headers block (which covers the static
+        # HTML pages in production — Vercel serves those directly, never
+        # through this Flask app). Setting the same headers here covers
+        # every API JSON response in every environment, and covers the
+        # HTML pages too on a local dev run where this app is the only
+        # server in the picture.
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(self), microphone=(), geolocation=(), payment=()"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' https://*.public.blob.vercel-storage.com data:; "
+            "connect-src 'self' https://blob.vercel-storage.com; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'; "
+            "frame-ancestors 'none'"
+        )
+        return response
+
     @app.get("/api/health")
     def health():
         try:

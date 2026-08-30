@@ -1,19 +1,25 @@
+import re
+
 from backend.db.mongo import get_db
 from backend.models.schemas import ValidationError
 from backend.images import storage
 from backend.images.processing import validate_and_process
 
+# Matches exactly what routes/images.py's Node upload-token endpoint
+# generates as a staging pathname (see api/blob-upload-token.js) — nothing
+# else is ever accepted by process_staged_image, so an authenticated caller
+# can't point it at an arbitrary existing key (e.g. another product's
+# already-published image) and have it "reprocessed" as if newly uploaded.
+STAGING_PATHNAME_RE = re.compile(r"^staging/[0-9a-f]{32}\.upload$")
 
-def upload_product_image(raw_bytes):
-    # Validate the file itself before ever checking storage configuration —
-    # a bad upload is a 400 regardless of whether storage happens to be
-    # configured in this environment; the two failure modes shouldn't be
-    # conflated just because of check ordering.
-    processed = validate_and_process(raw_bytes)
 
+def _upload_processed(processed):
+    """Uploads already-validated/resized/WebP-converted main+thumbnail
+    bytes to their final product keys, with the same rollback-on-partial-
+    -failure behavior regardless of how `processed` was produced."""
     if not storage.is_configured():
         raise RuntimeError(
-            "אחסון תמונות אינו מוגדר בסביבה זו (חסרים משתני סביבה S3_*). "
+            "אחסון תמונות אינו מוגדר בסביבה זו (חסר BERESHIT_IMAGES_READ_WRITE_TOKEN). "
             "פנה למנהל המערכת להגדרת שירות אחסון."
         )
 
@@ -25,7 +31,7 @@ def upload_product_image(raw_bytes):
         thumb_url = storage.upload_bytes(processed["thumb_bytes"], thumb_key, processed["content_type"])
     except Exception:
         # Don't leave an orphaned main image behind if the thumbnail half fails.
-        storage.delete_object(main_key)
+        storage.delete_object(main_url)
         raise
 
     return {
@@ -34,6 +40,45 @@ def upload_product_image(raw_bytes):
         "width": processed["width"],
         "height": processed["height"],
     }
+
+
+def upload_product_image(raw_bytes):
+    """Direct-bytes entry point — validates then uploads. Kept for
+    anything that already has the whole file in memory (e.g. tests);
+    the real Admin upload flow goes through process_staged_image below,
+    since a source photo can exceed Vercel's ~4.5MB function body limit
+    and must never be sent through this server at all."""
+    # Validate the file itself before ever checking storage configuration —
+    # a bad upload is a 400 regardless of whether storage happens to be
+    # configured in this environment; the two failure modes shouldn't be
+    # conflated just because of check ordering.
+    processed = validate_and_process(raw_bytes)
+    return _upload_processed(processed)
+
+
+def process_staged_image(pathname):
+    """Completes the client-direct-upload flow: the browser already PUT
+    the raw file straight to a temporary Blob path using a short-lived
+    signed URL minted by api/blob-upload-token.js, bypassing this server
+    entirely for that transfer — which is what keeps a large photo from
+    ever hitting Vercel's function body-size limit. This step is what
+    makes the server authoritative again: it fetches those raw bytes back,
+    runs them through the exact same validation/resize/WebP pipeline as
+    any other upload, and — whether that succeeds or fails — always
+    deletes the temporary staging blob, so nothing unvalidated is ever
+    left sitting in the store."""
+    if not STAGING_PATHNAME_RE.match(pathname or ""):
+        raise ValidationError("נתיב העלאה זמני לא תקין")
+
+    try:
+        raw_bytes = storage.fetch_bytes(pathname)
+        processed = validate_and_process(raw_bytes)
+    finally:
+        staged_url = storage.public_url_for_key(pathname)
+        if staged_url:
+            storage.delete_object(staged_url)
+
+    return _upload_processed(processed)
 
 
 def delete_product_image(url):
@@ -56,5 +101,5 @@ def delete_product_image(url):
     if still_used:
         return {"deleted": False, "reason": "in_use"}
 
-    storage.delete_object(key)
+    storage.delete_object(url)
     return {"deleted": True}

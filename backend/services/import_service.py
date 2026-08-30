@@ -20,7 +20,7 @@ from openpyxl import load_workbook
 from pymongo import ReturnDocument
 
 from backend.db.mongo import get_db, get_client
-from backend.models.schemas import ValidationError
+from backend.models.schemas import ValidationError, validate_image_url
 
 COLUMNS = ["SKU", "Barcode", "Name", "Category", "Price", "OldPrice", "Stock", "Threshold",
            "ShortDescription", "FullDescription", "Material", "Dimensions", "ImageURL"]
@@ -184,6 +184,13 @@ def validate_rows(raw_rows):
                     errors.append(f"ברקוד '{barcode}' כבר קיים במוצר אחר במערכת")
             seen_barcodes.add(barcode)
 
+        image_url_raw = _cell(raw, "ImageURL") or None
+        try:
+            image_url = validate_image_url(image_url_raw, "ImageURL")
+        except ValidationError:
+            image_url = None
+            errors.append("כתובת התמונה (ImageURL) חייבת להיות קישור http/https תקין")
+
         clean = {
             "sku": sku, "name": name,
             # Categories are stored with `_id` as the key (see
@@ -198,7 +205,7 @@ def validate_rows(raw_rows):
             "desc": _cell(raw, "FullDescription"),
             "material": _cell(raw, "Material"),
             "dim": _cell(raw, "Dimensions"),
-            "image": _cell(raw, "ImageURL") or None,
+            "image": image_url,
         }
         # Same sparse+unique-index reasoning as products_service.create_product:
         # a blank Barcode cell must leave the key entirely absent (never an

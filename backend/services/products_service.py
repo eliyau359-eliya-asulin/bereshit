@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pymongo import ReturnDocument
 
 from backend.db.mongo import get_db
-from backend.models.schemas import validate_fields, PRODUCT_SPEC, ValidationError
+from backend.models.schemas import validate_fields, validate_image_url, PRODUCT_SPEC, ValidationError
 from backend.services.common import serialize, serialize_many
 
 
@@ -59,6 +59,10 @@ def create_product(data):
     validate_fields(data, PRODUCT_SPEC, partial=False)
     if isinstance(data.get("stock"), bool) or not isinstance(data.get("stock"), int) or data["stock"] < 0:
         raise ValidationError("'stock' must be a non-negative whole number")
+    if "image" in data:
+        data["image"] = validate_image_url(data["image"], "image")
+    if "thumbnail" in data:
+        data["thumbnail"] = validate_image_url(data["thumbnail"], "thumbnail")
     db = get_db()
 
     if db.products.find_one({"sku": data["sku"]}):
@@ -103,6 +107,10 @@ def update_product(product_id, patch, actor=None):
     patch = {k: v for k, v in patch.items() if k not in ("id", "_id", "reason")}
     if not patch:
         raise ValidationError("No updatable fields were provided")
+    if "image" in patch:
+        patch["image"] = validate_image_url(patch["image"], "image")
+    if "thumbnail" in patch:
+        patch["thumbnail"] = validate_image_url(patch["thumbnail"], "thumbnail")
 
     if "stock" in patch:
         if isinstance(patch["stock"], bool) or not isinstance(patch["stock"], int):

@@ -4,6 +4,8 @@ already built against) — this is the same data model, just enforced here
 before anything is written to MongoDB.
 """
 
+from urllib.parse import urlparse
+
 from backend.auth.roles import ADMIN_ROLES  # noqa: F401  (re-exported for callers that validate a role string)
 
 NUMBER = (int, float)
@@ -13,6 +15,25 @@ class ValidationError(Exception):
     def __init__(self, message):
         super().__init__(message)
         self.message = message
+
+
+def validate_image_url(value, field_name="image"):
+    """Product `image`/`thumbnail` URLs come from three places: our own
+    upload pipeline (always https://*.public.blob.vercel-storage.com/...),
+    an admin manually pasting a link, or an imported CSV/Excel ImageURL
+    column — the last two are untrusted strings that end up in a
+    customer's <img src="...">. Only http(s) is ever acceptable; this is
+    what stops a `javascript:`/`data:`/`vbscript:` value from being
+    stored at all, rather than relying solely on the frontend to filter
+    it out at render time."""
+    if value is None or value == "":
+        return None
+    if not isinstance(value, str):
+        raise ValidationError(f"'{field_name}' must be a string URL")
+    scheme = urlparse(value).scheme.lower()
+    if scheme not in ("http", "https"):
+        raise ValidationError(f"'{field_name}' must be a valid http(s) URL")
+    return value
 
 
 def validate_fields(data, spec, partial=False):

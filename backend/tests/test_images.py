@@ -1,15 +1,27 @@
-"""Phase H: image validation/processing, and the upload/delete routes'
-auth + business-rule behavior. There is no real S3-compatible bucket
-configured in this test environment (no credentials are available here),
-so upload naturally exercises the "storage not configured" path — which
-is itself a real, important behavior to verify (a clear 503, never a
-silent fake success). The pure validation/resize logic in
-backend/images/processing.py is fully testable without any bucket at all
-and is covered thoroughly here.
+"""Phase H: image validation/processing, and the image routes' auth +
+business-rule behavior.
+
+The Admin upload flow is a client-direct-upload: the browser PUTs the raw
+file straight to Vercel Blob using a short-lived credential minted by a
+separate Node function (api/blob-upload-token.js, not exercised by this
+Python test suite — see its own header comment for what it does and why),
+then tells Flask where it landed via POST /api/images/process. That
+route, plus GET /api/images/upload-authorize (the server-to-server
+auth/permission check the Node function calls before minting anything),
+are what's tested here.
+
+There is no real Blob store configured in this test environment (no
+BLOB_* credentials are available here), so several of these naturally
+exercise the "storage not configured" path — itself a real, important
+behavior to verify (a clear 503, never a silent fake success). The pure
+validation/resize logic in backend/images/processing.py needs no store
+at all and is covered thoroughly here; the Blob-interaction tests mock
+`requests`/`storage` so they run without real credentials.
 """
 import io
 import sys
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 from PIL import Image
@@ -105,28 +117,120 @@ def test_empty_bytes_rejected():
 
 
 # ---------------------------------------------------------------------
-# Route auth + behavior (no real bucket configured in this test env)
+# Route auth + behavior for the client-direct-upload flow:
+#   GET  /api/images/upload-authorize  (called server-to-server by the
+#        Node upload-token function, never directly by the browser)
+#   POST /api/images/process           (fetches the client's already-
+#        staged upload back from Blob and runs the real pipeline on it)
+# No real bucket is configured in this test environment (no BLOB_*
+# credentials are available here), so most of these naturally exercise
+# the "storage not configured" path — itself a real, important behavior
+# to verify (a clear 503, never a silent fake success).
 # ---------------------------------------------------------------------
 
-def test_upload_requires_admin_auth(client):
-    data = {"file": (io.BytesIO(make_image_bytes(300, 300)), "test.png")}
-    res = client.post("/api/images/upload", data=data, content_type="multipart/form-data")
+VALID_STAGING_PATHNAME = "staging/" + "a" * 32 + ".upload"
+
+
+def test_upload_authorize_requires_admin_auth(client):
+    res = client.get("/api/images/upload-authorize")
     assert res.status_code == 401
 
 
-def test_upload_without_storage_configured_returns_503_not_a_fake_success(admin_client):
-    data = {"file": (io.BytesIO(make_image_bytes(300, 300)), "test.png")}
-    res = admin_client.post("/api/images/upload", data=data, content_type="multipart/form-data")
-    # This test environment has no S3_* credentials configured — the
-    # route must say so clearly, never pretend the upload worked.
+def test_upload_authorize_returns_ok_for_authorized_admin(admin_client):
+    res = admin_client.get("/api/images/upload-authorize")
+    assert res.status_code == 200
+    assert res.get_json() == {"authorized": True}
+
+
+def test_process_requires_admin_auth(client):
+    res = client.post("/api/images/process", json={"pathname": VALID_STAGING_PATHNAME})
+    assert res.status_code == 401
+
+
+def test_process_rejects_malformed_pathname_before_touching_storage(admin_client):
+    """A pathname outside the `staging/<uuid>.upload` shape (e.g. an
+    attempt to point this at an arbitrary existing product key, or a
+    path-traversal-looking value) is rejected outright — this endpoint
+    must never be usable to "reprocess" anything other than a file this
+    exact flow just staged."""
+    for bad in ["products/existing-product-image.webp", "staging/../../secrets.txt",
+                "staging/not-a-uuid.upload", "javascript:alert(1)", ""]:
+        res = admin_client.post("/api/images/process", json={"pathname": bad})
+        assert res.status_code == 400, bad
+
+
+def test_process_without_storage_configured_returns_503_not_a_fake_success(admin_client):
+    # This test environment has no BERESHIT_IMAGES_STORE_ID/
+    # BERESHIT_IMAGES_READ_WRITE_TOKEN configured — the route must say so
+    # clearly, never pretend it worked.
+    res = admin_client.post("/api/images/process", json={"pathname": VALID_STAGING_PATHNAME})
     assert res.status_code == 503
     assert res.get_json()["code"] == "STORAGE_NOT_CONFIGURED"
 
 
-def test_upload_rejects_invalid_image_before_ever_touching_storage(admin_client):
-    data = {"file": (io.BytesIO(b"not a real image"), "test.png")}
-    res = admin_client.post("/api/images/upload", data=data, content_type="multipart/form-data")
+def test_process_rejects_invalid_staged_image_and_still_cleans_up(admin_client, monkeypatch):
+    from backend.services import images_service
+
+    delete_calls = []
+    monkeypatch.setattr(images_service.storage, "fetch_bytes", lambda key: b"not a real image")
+    monkeypatch.setattr(images_service.storage, "public_url_for_key", lambda key: f"{TEST_BLOB_URL_PREFIX}/{key}")
+    monkeypatch.setattr(images_service.storage, "delete_object", lambda url: delete_calls.append(url))
+
+    res = admin_client.post("/api/images/process", json={"pathname": VALID_STAGING_PATHNAME})
     assert res.status_code == 400
+    # The garbage staging blob must never be left behind just because it
+    # failed validation.
+    assert delete_calls == [f"{TEST_BLOB_URL_PREFIX}/{VALID_STAGING_PATHNAME}"]
+
+
+def test_process_never_leaks_blob_credentials_in_any_response(admin_client, monkeypatch):
+    """Regression guard for the client-direct-upload architecture: no
+    Flask JSON response — success or error — may ever contain the real
+    BERESHIT_IMAGES_READ_WRITE_TOKEN value, regardless of what triggers
+    the response."""
+    monkeypatch.setenv("BERESHIT_IMAGES_READ_WRITE_TOKEN", "super-secret-rw-token-must-never-leak")
+    for bad in ["", "not/staging/shape"]:
+        res = admin_client.post("/api/images/process", json={"pathname": bad})
+        assert "super-secret-rw-token-must-never-leak" not in res.get_data(as_text=True)
+    res = admin_client.post("/api/images/process", json={"pathname": VALID_STAGING_PATHNAME})
+    assert "super-secret-rw-token-must-never-leak" not in res.get_data(as_text=True)
+    res = admin_client.get("/api/images/upload-authorize")
+    assert "super-secret-rw-token-must-never-leak" not in res.get_data(as_text=True)
+
+
+def test_process_full_flow_fetches_stages_and_uploads_then_cleans_up(admin_client, monkeypatch):
+    """End-to-end (within this process): a valid staged image is fetched
+    back from Blob, validated/resized/WebP-converted, uploaded as a real
+    product main+thumbnail, and the staging blob is deleted — the
+    complete replacement for the old direct-multipart-upload endpoint."""
+    from backend.services import images_service
+
+    put_calls = []
+    delete_calls = []
+
+    def fake_fetch_bytes(key):
+        assert key == VALID_STAGING_PATHNAME
+        return make_image_bytes(500, 500, "PNG")
+
+    def fake_upload_bytes(data, key, content_type):
+        put_calls.append(key)
+        return f"{TEST_BLOB_URL_PREFIX}/{key}"
+
+    monkeypatch.setattr(images_service.storage, "is_configured", lambda: True)
+    monkeypatch.setattr(images_service.storage, "fetch_bytes", fake_fetch_bytes)
+    monkeypatch.setattr(images_service.storage, "public_url_for_key", lambda key: f"{TEST_BLOB_URL_PREFIX}/{key}")
+    monkeypatch.setattr(images_service.storage, "upload_bytes", fake_upload_bytes)
+    monkeypatch.setattr(images_service.storage, "delete_object", lambda url: delete_calls.append(url))
+
+    res = admin_client.post("/api/images/process", json={"pathname": VALID_STAGING_PATHNAME})
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()
+    assert body["url"].startswith(f"{TEST_BLOB_URL_PREFIX}/products/")
+    assert body["thumbnailUrl"].startswith(f"{TEST_BLOB_URL_PREFIX}/products/thumbs/")
+    assert body["width"] == 500 and body["height"] == 500
+    assert len(put_calls) == 2  # main + thumbnail
+    # The temporary staging blob (not the new product images) was cleaned up.
+    assert delete_calls == [f"{TEST_BLOB_URL_PREFIX}/{VALID_STAGING_PATHNAME}"]
 
 
 def test_delete_requires_admin_auth(client):
@@ -169,17 +273,29 @@ def test_product_create_and_update_persist_thumbnail_field(db):
         delete_product(created["id"])
 
 
+TEST_BLOB_URL_PREFIX = "https://testStoreId123.public.blob.vercel-storage.com"
+
+
+def test_delete_product_image_succeeds_when_not_referenced_anywhere(db, monkeypatch):
+    from backend.services import images_service
+    from backend.images import storage
+
+    delete_calls = []
+    monkeypatch.setattr(storage, "delete_object", lambda url: delete_calls.append(url))
+
+    url = f"{TEST_BLOB_URL_PREFIX}/products/orphaned-{uuid4().hex}.webp"
+    db.products.delete_many({"image": url})  # guard against a stale leftover from a prior failed run
+
+    result = images_service.delete_product_image(url)
+    assert result == {"deleted": True}
+    assert delete_calls == [url]
+
+
 def test_delete_product_image_checks_thumbnail_field_too(db, monkeypatch):
     from backend.services import images_service
     from backend.images import storage
 
-    # Simulate a configured bucket so key_from_url can resolve the URL,
-    # without needing real S3 credentials in this environment.
-    monkeypatch.setattr(storage, "_config", lambda: {
-        "bucket": "test-bucket", "access_key": "x", "secret_key": "x", "region": "us-east-1",
-        "endpoint_url": None, "public_base_url": "https://cdn.example.com", "use_public_acl": False,
-    })
-    monkeypatch.setattr(storage, "delete_object", lambda key: None)
+    monkeypatch.setattr(storage, "delete_object", lambda url: None)
 
     pid_sku = "QA-THUMB-TEST-2"
     db.products.delete_many({"sku": pid_sku})
@@ -187,10 +303,277 @@ def test_delete_product_image_checks_thumbnail_field_too(db, monkeypatch):
     created = create_product({
         "sku": pid_sku, "cat": "gifts", "catLabel": "מתנות", "name": "מוצר",
         "price": 10, "stock": 1, "threshold": 1,
-        "thumbnail": "https://cdn.example.com/products/thumbs/still-used.webp",
+        "thumbnail": f"{TEST_BLOB_URL_PREFIX}/products/thumbs/still-used.webp",
     })
     try:
-        result = images_service.delete_product_image("https://cdn.example.com/products/thumbs/still-used.webp")
+        result = images_service.delete_product_image(f"{TEST_BLOB_URL_PREFIX}/products/thumbs/still-used.webp")
         assert result == {"deleted": False, "reason": "in_use"}
+    finally:
+        delete_product(created["id"])
+
+
+# ---------------------------------------------------------------------
+# Vercel Blob storage layer (backend/images/storage.py) — pure key/URL
+# logic needs no network; upload/delete are tested against a mocked
+# `requests` layer so these run without real Blob credentials.
+# ---------------------------------------------------------------------
+
+def test_key_from_url_recognizes_our_public_blob_host():
+    from backend.images import storage
+    url = f"{TEST_BLOB_URL_PREFIX}/products/abc123.webp"
+    assert storage.key_from_url(url) == "products/abc123.webp"
+
+
+def test_key_from_url_rejects_external_or_legacy_urls():
+    from backend.images import storage
+    assert storage.key_from_url("https://admin-pasted-external.example.com/pic.jpg") is None
+    assert storage.key_from_url("https://evil.com/products/abc123.webp") is None
+    assert storage.key_from_url(None) is None
+    assert storage.key_from_url("") is None
+    assert storage.key_from_url("javascript:alert(1)") is None
+
+
+def test_key_from_url_rejects_plain_http_even_on_the_right_host():
+    # Only https is ever a real Blob URL — a plain-http lookalike is not ours.
+    from backend.images import storage
+    assert storage.key_from_url(f"http://testStoreId123.public.blob.vercel-storage.com/x.webp") is None
+
+
+# ---------------------------------------------------------------------
+# bereshit-images-public is connected under a custom "BERESHIT_IMAGES"
+# variable prefix — a second, older store's unprefixed BLOB_* variables
+# still exist in the Vercel project (kept around intentionally, not yet
+# removed) and must never be read here, or an upload could silently land
+# in the wrong/old store.
+# ---------------------------------------------------------------------
+
+def test_storage_reads_the_new_prefixed_token_env_var(monkeypatch):
+    from backend.images import storage
+    monkeypatch.delenv("BLOB_READ_WRITE_TOKEN", raising=False)
+    monkeypatch.setenv("BERESHIT_IMAGES_READ_WRITE_TOKEN", "the-real-new-store-token")
+    assert storage._token() == "the-real-new-store-token"
+    assert storage.is_configured() is True
+
+
+def test_storage_never_falls_back_to_the_old_unprefixed_blob_token(monkeypatch):
+    from backend.images import storage
+    monkeypatch.delenv("BERESHIT_IMAGES_READ_WRITE_TOKEN", raising=False)
+    monkeypatch.setenv("BLOB_READ_WRITE_TOKEN", "old-store-token-must-not-be-used")
+    assert storage._token() is None
+    assert storage.is_configured() is False
+
+
+def test_storage_reads_the_new_prefixed_store_id_env_var(monkeypatch):
+    from backend.images import storage
+    monkeypatch.delenv("BLOB_STORE_ID", raising=False)
+    monkeypatch.setenv("BERESHIT_IMAGES_STORE_ID", "newstoreid456")
+    assert storage.public_url_for_key("products/x.webp") == "https://newstoreid456.public.blob.vercel-storage.com/products/x.webp"
+
+
+def test_storage_never_falls_back_to_the_old_unprefixed_store_id(monkeypatch):
+    from backend.images import storage
+    monkeypatch.delenv("BERESHIT_IMAGES_STORE_ID", raising=False)
+    monkeypatch.setenv("BLOB_STORE_ID", "oldstoreid123")
+    assert storage.public_url_for_key("products/x.webp") is None
+
+
+class _FakeResponse:
+    def __init__(self, status_code, json_data=None, text=""):
+        self.status_code = status_code
+        self._json = json_data or {}
+        self.text = text
+
+    def json(self):
+        return self._json
+
+
+def test_upload_bytes_puts_to_blob_api_and_returns_url(monkeypatch):
+    from backend.images import storage
+    monkeypatch.setattr(storage, "_token", lambda: "fake-rw-token")
+
+    captured = {}
+
+    def fake_put(url, params=None, headers=None, data=None, timeout=None):
+        captured["url"] = url
+        captured["params"] = params
+        captured["headers"] = headers
+        captured["data"] = data
+        return _FakeResponse(200, {"url": f"{TEST_BLOB_URL_PREFIX}/{params['pathname']}"})
+
+    monkeypatch.setattr(storage.requests, "put", fake_put)
+
+    result_url = storage.upload_bytes(b"fake-webp-bytes", "products/xyz.webp", "image/webp")
+
+    assert result_url == f"{TEST_BLOB_URL_PREFIX}/products/xyz.webp"
+    assert captured["headers"]["authorization"] == "Bearer fake-rw-token"
+    assert captured["headers"]["access"] == "public"
+    assert captured["headers"]["x-content-type"] == "image/webp"
+    # Never leak the token in the URL/params — only in the auth header.
+    assert "fake-rw-token" not in str(captured["params"])
+
+
+def test_upload_bytes_raises_runtime_error_on_non_200(monkeypatch):
+    from backend.images import storage
+    monkeypatch.setattr(storage, "_token", lambda: "fake-rw-token")
+    monkeypatch.setattr(
+        storage.requests, "put",
+        lambda *a, **k: _FakeResponse(403, text="forbidden — store is private"),
+    )
+    with pytest.raises(RuntimeError):
+        storage.upload_bytes(b"data", "products/xyz.webp", "image/webp")
+
+
+def test_delete_object_calls_blob_delete_endpoint_for_our_own_url(monkeypatch):
+    from backend.images import storage
+    monkeypatch.setattr(storage, "_token", lambda: "fake-rw-token")
+
+    captured = {}
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        captured["url"] = url
+        captured["headers"] = headers
+        captured["json"] = json
+        return _FakeResponse(200, {})
+
+    monkeypatch.setattr(storage.requests, "post", fake_post)
+
+    storage.delete_object(f"{TEST_BLOB_URL_PREFIX}/products/xyz.webp")
+
+    assert captured["url"] == f"{storage._BLOB_API_BASE}/delete"
+    assert captured["json"] == {"urls": [f"{TEST_BLOB_URL_PREFIX}/products/xyz.webp"]}
+
+
+def test_delete_object_never_calls_blob_api_for_external_url(monkeypatch):
+    """Deleting an admin-pasted/imported external URL, or one from another
+    host entirely, must never reach the Blob API at all — regardless of
+    whether it happens to be `is_configured()`."""
+    from backend.images import storage
+    monkeypatch.setattr(storage, "_token", lambda: "fake-rw-token")
+
+    called = {"count": 0}
+
+    def fake_post(*a, **k):
+        called["count"] += 1
+        return _FakeResponse(200, {})
+
+    monkeypatch.setattr(storage.requests, "post", fake_post)
+
+    storage.delete_object("https://admin-pasted-external.example.com/pic.jpg")
+    assert called["count"] == 0
+
+
+def test_upload_product_image_rolls_back_main_when_thumbnail_upload_fails(monkeypatch):
+    from backend.services import images_service
+    from backend.images import storage
+    monkeypatch.setattr(storage, "_token", lambda: "fake-rw-token")
+
+    put_calls = []
+    delete_calls = []
+
+    def fake_put(url, params=None, headers=None, data=None, timeout=None):
+        put_calls.append(params["pathname"])
+        if len(put_calls) == 1:
+            return _FakeResponse(200, {"url": f"{TEST_BLOB_URL_PREFIX}/{params['pathname']}"})
+        return _FakeResponse(500, text="thumbnail upload failed")
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        delete_calls.append(json["urls"])
+        return _FakeResponse(200, {})
+
+    monkeypatch.setattr(storage.requests, "put", fake_put)
+    monkeypatch.setattr(storage.requests, "post", fake_post)
+
+    with pytest.raises(RuntimeError):
+        images_service.upload_product_image(make_image_bytes(300, 300, "PNG"))
+
+    # The main image upload succeeded before the thumbnail failed — it
+    # must be cleaned up rather than left orphaned in the Blob store.
+    assert len(put_calls) == 2
+    assert len(delete_calls) == 1
+    assert delete_calls[0] == [f"{TEST_BLOB_URL_PREFIX}/{put_calls[0]}"]
+
+
+def test_upload_product_image_returns_main_and_thumbnail_urls_on_success(monkeypatch):
+    from backend.services import images_service
+    from backend.images import storage
+    monkeypatch.setattr(storage, "_token", lambda: "fake-rw-token")
+
+    def fake_put(url, params=None, headers=None, data=None, timeout=None):
+        return _FakeResponse(200, {"url": f"{TEST_BLOB_URL_PREFIX}/{params['pathname']}"})
+
+    monkeypatch.setattr(storage.requests, "put", fake_put)
+
+    result = images_service.upload_product_image(make_image_bytes(500, 500, "PNG"))
+    assert result["url"].startswith(f"{TEST_BLOB_URL_PREFIX}/products/")
+    assert result["thumbnailUrl"].startswith(f"{TEST_BLOB_URL_PREFIX}/products/thumbs/")
+    assert result["url"] != result["thumbnailUrl"]
+    assert result["width"] == 500 and result["height"] == 500
+
+
+# ---------------------------------------------------------------------
+# Authorization matrix on the image routes
+# ---------------------------------------------------------------------
+
+def test_upload_forbidden_for_role_without_products_write(db):
+    from backend.auth.security import hash_password
+    from backend.auth.roles import ORDERS_MANAGER
+
+    admin_id = "AU-TEST-IMG-ORDMGR"
+    email = "test-img-ordmgr@bereshit.test"
+    db.admin_users.delete_one({"_id": admin_id})
+    db.admin_users.insert_one({
+        "_id": admin_id, "name": "Ord Mgr", "email": email,
+        "passwordHash": hash_password("TestOrdMgr123!"), "role": ORDERS_MANAGER, "active": True,
+    })
+    try:
+        c = flask_app.test_client()
+        login = c.post("/api/auth/admin/login", json={"email": email, "password": "TestOrdMgr123!"})
+        assert login.status_code == 200, login.get_json()
+
+        auth_res = c.get("/api/images/upload-authorize")
+        assert auth_res.status_code == 403
+
+        process_res = c.post("/api/images/process", json={"pathname": "staging/" + "b" * 32 + ".upload"})
+        assert process_res.status_code == 403
+
+        del_res = c.delete("/api/images", json={"url": f"{TEST_BLOB_URL_PREFIX}/products/x.webp"})
+        assert del_res.status_code == 403
+    finally:
+        db.admin_users.delete_one({"_id": admin_id})
+
+
+# ---------------------------------------------------------------------
+# Product image URL fields reject non-http(s) schemes at the model layer
+# (defense in depth alongside the frontend's own URL/scheme validation).
+# ---------------------------------------------------------------------
+
+def test_product_create_rejects_javascript_scheme_image_url(db):
+    from backend.services.products_service import create_product
+    from backend.models.schemas import ValidationError as SchemaValidationError
+
+    pid_sku = "QA-XSS-IMG-TEST-1"
+    db.products.delete_many({"sku": pid_sku})
+    with pytest.raises(SchemaValidationError):
+        create_product({
+            "sku": pid_sku, "cat": "gifts", "catLabel": "מתנות", "name": "מוצר",
+            "price": 10, "stock": 1, "threshold": 1,
+            "image": "javascript:alert(1)",
+        })
+    assert db.products.find_one({"sku": pid_sku}) is None
+
+
+def test_product_update_rejects_data_scheme_thumbnail_url(db):
+    from backend.services.products_service import create_product, update_product, delete_product
+    from backend.models.schemas import ValidationError as SchemaValidationError
+
+    pid_sku = "QA-XSS-IMG-TEST-2"
+    db.products.delete_many({"sku": pid_sku})
+    created = create_product({
+        "sku": pid_sku, "cat": "gifts", "catLabel": "מתנות", "name": "מוצר",
+        "price": 10, "stock": 1, "threshold": 1,
+    })
+    try:
+        with pytest.raises(SchemaValidationError):
+            update_product(created["id"], {"thumbnail": "data:text/html,<script>alert(1)</script>"})
     finally:
         delete_product(created["id"])

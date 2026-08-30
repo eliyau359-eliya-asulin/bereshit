@@ -1,0 +1,8 @@
+{
+  "name": "bereshit-vercel-functions",
+  "private": true,
+  "description": "Node dependency manifest for the one Node serverless function in this otherwise-Python project: api/blob-upload-token.js (mints short-lived Vercel Blob upload credentials for the Admin image-upload flow). Everything else — the Flask API, the customer storefront, the admin dashboard — is unaffected by this file.",
+  "dependencies": {
+    "@vercel/blob": "^2.8.0"
+  }
+}

@@ -131,6 +131,52 @@ def test_existing_sku_detected_as_update(db, category):
 # apply_import — real writes, transactional
 # ---------------------------------------------------------------------
 
+# ---------------------------------------------------------------------
+# Untrusted content: an imported name/description containing markup must
+# survive the import pipeline as plain, inert text — never stripped,
+# rewritten, or (this is the actual security property) executed. Safety
+# against it running as HTML lives at the frontend rendering boundary
+# (escaped output), not by mangling the stored string here.
+# ---------------------------------------------------------------------
+
+def test_imported_script_tag_in_name_is_stored_as_literal_inert_text(db, category):
+    sku = f"IMPORT-XSS-{TEST_PRODUCT_ID_START}"
+    payload = '<script>alert(1)</script>'
+    db.products.delete_many({"sku": sku})
+    try:
+        rows = import_service.parse_import_file(csv_bytes([make_row(sku, name=payload)]), "products.csv")
+        report = import_service.validate_rows(rows)
+        assert report["rows"][0]["valid"] is True
+        result = import_service.apply_import(report["rows"], actor={"id": "AU-TEST", "name": "Tester"})
+        assert result["created"] == 1
+        created = db.products.find_one({"sku": sku})
+        # Stored verbatim as a plain string — no HTML entities, no <script>
+        # tag execution semantics apply to a MongoDB string field at all.
+        assert created["name"] == payload
+    finally:
+        db.products.delete_many({"sku": sku})
+
+
+def test_imported_image_url_with_javascript_scheme_is_flagged_invalid(category):
+    sku = f"IMPORT-XSS-IMG-{TEST_PRODUCT_ID_START}"
+    rows = import_service.parse_import_file(
+        csv_bytes([make_row(sku, ImageURL="javascript:alert(1)")]), "products.csv",
+    )
+    report = import_service.validate_rows(rows)
+    assert report["rows"][0]["valid"] is False
+    assert any("ImageURL" in e or "תמונה" in e for e in report["rows"][0]["errors"])
+
+
+def test_imported_image_url_with_valid_https_is_accepted(category):
+    sku = f"IMPORT-VALIDIMG-{TEST_PRODUCT_ID_START}"
+    rows = import_service.parse_import_file(
+        csv_bytes([make_row(sku, ImageURL="https://example.com/photo.jpg")]), "products.csv",
+    )
+    report = import_service.validate_rows(rows)
+    assert report["rows"][0]["valid"] is True
+    assert report["rows"][0]["data"]["image"] == "https://example.com/photo.jpg"
+
+
 def test_apply_import_creates_new_product_and_logs_nothing_fake(db, category):
     sku = f"IMPORT-APPLY-{TEST_PRODUCT_ID_START}"
     db.products.delete_many({"sku": sku})

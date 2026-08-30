@@ -85,6 +85,70 @@
     return body;
   }
 
+  /** Step 1 of 3: ask api/blob-upload-token.js (a small Node function,
+   * separate from the Flask API) for a one-time upload credential. It
+   * decides whether to grant one only by forwarding this browser's own
+   * session cookie to the real Flask auth/permission check — this call
+   * itself carries no credentials of its own, and the Blob store's
+   * read-write token never appears anywhere in its response.
+   *
+   * Deliberately NOT routed through API_BASE: in production this
+   * function is served from the exact same Vercel deployment/origin as
+   * the page itself, so a plain same-origin relative fetch is correct.
+   * (In local dev there is no emulation of this Node function — see
+   * .claude/launch.json / README notes — so this call only succeeds
+   * once actually deployed to Vercel.) */
+  async function requestBlobUploadToken(){
+    let res;
+    try{
+      res = await fetch('/api/blob-upload-token', { method:'POST', credentials:'include' });
+    }catch(networkErr){
+      throw new Error('לא ניתן להתחבר לשירות ההעלאה');
+    }
+    let body = null;
+    try{ body = await res.json(); }catch(parseErr){ /* noop */ }
+    if(!res.ok){
+      const err = new Error((body && body.error) || `לא ניתן להתחיל העלאת תמונה (${res.status})`);
+      err.status = res.status; err.code = body && body.code;
+      throw err;
+    }
+    return body; // { presignedUrl, pathname }
+  }
+
+  /** Step 2 of 3: PUT the raw file straight to Vercel Blob using the
+   * presigned URL from step 1 — this never touches this app's own
+   * server at all. */
+  async function putFileToBlob(presignedUrl, file){
+    let res;
+    try{
+      res = await fetch(presignedUrl, {
+        method: 'PUT',
+        headers: { 'content-type': file.type || 'application/octet-stream' },
+        body: file,
+      });
+    }catch(networkErr){
+      throw new Error('העלאת התמונה נכשלה (שגיאת רשת)');
+    }
+    if(!res.ok){
+      let message = `העלאת התמונה נכשלה (${res.status})`;
+      try{
+        const body = await res.json();
+        if(body && body.message) message = body.message;
+      }catch(parseErr){ /* noop — Blob's error bodies aren't always JSON */ }
+      throw new Error(message);
+    }
+  }
+
+  /** Step 3 of 3: tell the Flask API the upload landed at `pathname` so
+   * it can fetch those bytes back and run the real, authoritative
+   * validate/resize/WebP/thumbnail pipeline. Resolves
+   * { url, thumbnailUrl, width, height }. */
+  async function uploadProductImageViaDirectBlobUpload(file){
+    const { presignedUrl, pathname } = await requestBlobUploadToken();
+    await putFileToBlob(presignedUrl, file);
+    return request('/images/process', { method:'POST', body: JSON.stringify({ pathname }) });
+  }
+
   const BereshitData = {
 
     /* ---------------- Products ---------------- */
@@ -104,9 +168,17 @@
      * records a real inventory_log entry (reason optional; defaults server-side). */
     updateInventory(id, newStock, reason){ return this.updateProduct(id, { stock: newStock, reason }); },
     deleteProduct(id){ return request(`/products/${id}`, { method:'DELETE' }); },
-    /** Validates, resizes/optimizes to WebP, and stores the file in external
-     * object storage (see backend/images/). Resolves { url, thumbnailUrl, width, height }. */
-    uploadProductImage(file){ return uploadFile('/images/upload', file); },
+    /** Uploads a product photo. The raw file goes straight from this
+     * browser to Vercel Blob (never through the Flask function — a
+     * source photo can exceed Vercel's ~4.5MB function body limit, which
+     * cannot be raised) using a short-lived, narrowly-scoped credential
+     * minted by api/blob-upload-token.js; the server then fetches those
+     * bytes back, validates/resizes/converts to WebP, generates a
+     * thumbnail, and stores the results (see
+     * backend/services/images_service.py:process_staged_image). Resolves
+     * { url, thumbnailUrl, width, height } — identical shape regardless
+     * of how the bytes got there. */
+    uploadProductImage(file){ return uploadProductImageViaDirectBlobUpload(file); },
     /** Best-effort: deletes an image from storage unless another product
      * still references it. Safe to call fire-and-forget after a save. */
     deleteProductImage(url){ return request('/images', { method:'DELETE', body: JSON.stringify({ url }) }); },

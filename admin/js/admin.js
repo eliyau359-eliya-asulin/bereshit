@@ -13,9 +13,11 @@
   const fmt = n => '₪' + Number(n).toLocaleString('he-IL');
   const fmtDate = d => { const dt=new Date(d); return dt.toLocaleDateString('he-IL',{day:'numeric',month:'short',year:'numeric'}); };
   const initials = name => name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('');
-  function escAttr(str){
-    return String(str==null?'':str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+  // Defined once in shared/security.js (loaded above, before this file)
+  // and reused as-is here and in index.html — see that file for the
+  // implementation and why each one exists.
+  const escAttr = BereshitSecurity.escapeHtml;
+  const safeImageUrl = BereshitSecurity.safeImageUrl;
 
   /* ---------------- Toast ---------------- */
   let toastTimer;
@@ -55,8 +57,9 @@
   // placeholder above. This is what every product-representing surface
   // (table, grid, best-sellers, low-stock, order lines) should use.
   function productImgHtml(p, size){
-    if(p && p.image){
-      return `<div class="thumb" style="width:${size}px;height:${size}px"><img src="${escAttr(p.image)}" alt="${escAttr(p.name||'')}" onerror="this.remove()"></div>`;
+    const safeUrl = p && p.image ? safeImageUrl(p.image) : null;
+    if(safeUrl){
+      return `<div class="thumb" style="width:${size}px;height:${size}px"><img src="${escAttr(safeUrl)}" alt="${escAttr(p.name||'')}" onerror="this.remove()"></div>`;
     }
     return thumbHtml(p ? p.cat : null, size);
   }
@@ -241,8 +244,8 @@
     const top = [...PRODUCTS].sort((a,b)=>b.sold-a.sold).slice(0,5);
     $('#bestSellersBody').innerHTML = top.map(p=>`
       <tr>
-        <td><div class="cell-main">${productImgHtml(p,34)}<span class="cell-title">${p.name}</span></div></td>
-        <td class="text-faint">${p.cat}</td>
+        <td><div class="cell-main">${productImgHtml(p,34)}<span class="cell-title">${escAttr(p.name)}</span></div></td>
+        <td class="text-faint">${escAttr(p.cat)}</td>
         <td class="num">${fmt(p.price)}</td>
         <td class="num">${p.sold}</td>
       </tr>
@@ -255,7 +258,7 @@
     $('#lowStockList').innerHTML = low.slice(0,6).map(p=>`
       <div class="stock-row">
         ${productImgHtml(p,38)}
-        <div class="stock-info"><b>${p.name}</b><span>מק"ט ${p.sku}</span></div>
+        <div class="stock-info"><b>${escAttr(p.name)}</b><span>מק"ט ${escAttr(p.sku)}</span></div>
         <span class="stock-badge ${p.stock===0?'critical':'low'}">${p.stock===0?'אזל מהמלאי':'נותרו '+p.stock}</span>
       </div>
     `).join('');
@@ -306,8 +309,8 @@
   function statusCls(s){ return {active:'success',draft:'neutral',out:'danger'}[s] || 'neutral'; }
   function productRow(p){
     return `<tr>
-      <td data-label="מוצר"><div class="cell-main">${productImgHtml(p,40)}<div><div class="cell-title">${p.name}</div><div class="cell-sub">מק"ט ${p.sku}</div></div></div></td>
-      <td data-label="קטגוריה" class="text-faint">${p.cat}</td>
+      <td data-label="מוצר"><div class="cell-main">${productImgHtml(p,40)}<div><div class="cell-title">${escAttr(p.name)}</div><div class="cell-sub">מק"ט ${escAttr(p.sku)}</div></div></div></td>
+      <td data-label="קטגוריה" class="text-faint">${escAttr(p.cat)}</td>
       <td data-label="מחיר" class="num">${fmt(p.price)}</td>
       <td data-label="מלאי" class="num">${p.stock<=p.threshold ? `<span style="color:var(--danger);font-weight:700">${p.stock}</span>` : p.stock}</td>
       <td data-label="סטטוס"><span class="status-badge ${statusCls(p.status)}">${statusLabel(p.status)}</span></td>
@@ -321,8 +324,8 @@
     return `<div class="pgrid-card">
       ${productImgHtml(p,190).replace('class="thumb','class="thumb pgrid-thumb')}
       <div class="pgrid-body">
-        <div class="pgrid-cat">${p.cat}</div>
-        <div class="pgrid-name">${p.name}</div>
+        <div class="pgrid-cat">${escAttr(p.cat)}</div>
+        <div class="pgrid-name">${escAttr(p.name)}</div>
         <div class="pgrid-foot">
           <span class="pgrid-price">${fmt(p.price)}</span>
           <div class="cell-actions">
@@ -390,8 +393,9 @@
 
   function renderImagePreview(url, categoryLabel){
     const wrap = $('#pfImagePreview');
-    if(url){
-      wrap.innerHTML = `<div class="thumb"><img src="${escAttr(url)}" alt="" onerror="this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\'>${catIcon(categoryLabel).replace(/'/g,"\\'")}</svg>'"></div>`;
+    const safeUrl = safeImageUrl(url);
+    if(safeUrl){
+      wrap.innerHTML = `<div class="thumb"><img src="${escAttr(safeUrl)}" alt="" onerror="this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\'>${catIcon(categoryLabel).replace(/'/g,"\\'")}</svg>'"></div>`;
     } else {
       wrap.innerHTML = `<div class="thumb"><svg viewBox="0 0 24 24">${catIcon(categoryLabel)}</svg></div>`;
     }
@@ -457,6 +461,10 @@
     $('#pfImageUrlManualInput').addEventListener('change', ()=>{
       const url = $('#pfImageUrlManualInput').value.trim();
       if(!url) return;
+      if(!safeImageUrl(url)){
+        $('#pfImageError').textContent = 'כתובת התמונה חייבת להיות קישור http/https תקין';
+        return;
+      }
       $('#pfImageError').textContent = '';
       $('#pfImageStatus').textContent = '';
       $('#pfImageUrl').value = url;
@@ -660,16 +668,16 @@
     $('#orderModalTitle').textContent = '#' + o.id;
     $('#orderModalSub').textContent = fmtDate(o.date) + ' · ' + o.items.reduce((s,it)=>s+it.qty,0) + ' פריטים';
 
-    $('#omCustomer').innerHTML = `<b>${o.customer.name}</b><span>${o.customer.email}</span><span>${o.customer.phone}</span>`;
-    $('#omShipping').innerHTML = `<b>${o.shipping.method}</b><span>${o.shipping.address}</span><span>${o.shipping.city}, ${o.shipping.zip}</span>`;
-    $('#omPayment').innerHTML = `<b>${o.payment.method}</b><span>סטטוס: ${o.pay}</span><span>${fmtDate(o.payment.date)}</span>`;
+    $('#omCustomer').innerHTML = `<b>${escAttr(o.customer.name)}</b><span>${escAttr(o.customer.email)}</span><span>${escAttr(o.customer.phone)}</span>`;
+    $('#omShipping').innerHTML = `<b>${escAttr(o.shipping.method)}</b><span>${escAttr(o.shipping.address)}</span><span>${escAttr(o.shipping.city)}, ${escAttr(o.shipping.zip)}</span>`;
+    $('#omPayment').innerHTML = `<b>${escAttr(o.payment.method)}</b><span>סטטוס: ${escAttr(o.pay)}</span><span>${fmtDate(o.payment.date)}</span>`;
 
     $('#omLines').innerHTML = o.items.map(it=>{
       const prod = PRODUCTS.find(x=>x.sharedId===it.productId);
       const img = prod ? productImgHtml(prod,44) : thumbHtml(it.cat,44);
       return `<div class="order-line">
         ${img}
-        <div class="order-line-info"><b>${it.name}</b><span>${it.cat} · כמות ${it.qty}</span></div>
+        <div class="order-line-info"><b>${escAttr(it.name)}</b><span>${escAttr(it.cat)} · כמות ${it.qty}</span></div>
         <div class="order-line-total">${fmt(it.price*it.qty)}</div>
       </div>`;
     }).join('');
@@ -753,9 +761,9 @@
         <thead><tr><th>לקוח</th><th>אימייל</th><th>טלפון</th><th>הזמנות</th><th>סה"כ הוצאה</th><th>תאריך הרשמה</th><th></th></tr></thead>
         <tbody>${list.map(c=>`
           <tr>
-            <td data-label="לקוח"><div class="cell-main"><div class="avatar-sm">${initials(c.name)}</div><span class="cell-title">${c.name}</span></div></td>
-            <td data-label="אימייל" class="text-faint">${c.email}</td>
-            <td data-label="טלפון" class="text-faint">${c.phone}</td>
+            <td data-label="לקוח"><div class="cell-main"><div class="avatar-sm">${escAttr(initials(c.name))}</div><span class="cell-title">${escAttr(c.name)}</span></div></td>
+            <td data-label="אימייל" class="text-faint">${escAttr(c.email)}</td>
+            <td data-label="טלפון" class="text-faint">${escAttr(c.phone)}</td>
             <td data-label="הזמנות" class="num">${c.orders}</td>
             <td data-label="סה&quot;כ הוצאה" class="num">${fmt(c.spent)}</td>
             <td data-label="תאריך הרשמה" class="text-faint">${fmtDate(c.joined)}</td>
@@ -775,7 +783,7 @@
     const c = CUSTOMERS.find(x=>x.id===customerId);
     if(!c) return;
     $('#customerModalTitle').textContent = c.name;
-    $('#cmContact').innerHTML = `<b>${c.email}</b><span>${c.phone}</span><span>לקוח/ה מאז ${fmtDate(c.joined)}</span>`;
+    $('#cmContact').innerHTML = `<b>${escAttr(c.email)}</b><span>${escAttr(c.phone)}</span><span>לקוח/ה מאז ${fmtDate(c.joined)}</span>`;
     $('#cmSummary').innerHTML = `<b>${c.orders} הזמנות</b><span>סה"כ הוצאה: ${fmt(c.spent)}</span>`;
     $('#cmOrdersBody').innerHTML = `<tr><td colspan="4" class="text-faint">טוען הזמנות...</td></tr>`;
     openModal('#customerModal');
@@ -800,7 +808,7 @@
     if(!CATEGORIES.length){ $('#categoryGrid').closest('.panel').querySelector('.table-scroll').innerHTML = emptyState('אין קטגוריות','הוסף קטגוריה ראשונה כדי להתחיל.'); return; }
     $('#categoryGrid').innerHTML = CATEGORIES.map(c=>`
       <tr>
-        <td><div class="cell-main">${thumbHtml(c.name,38)}<span class="cell-title">${c.name}</span></div></td>
+        <td><div class="cell-main">${thumbHtml(c.name,38)}<span class="cell-title">${escAttr(c.name)}</span></div></td>
         <td class="num">${c.count} מוצרים</td>
         <td><span class="status-badge ${c.status==='active'?'success':'neutral'}">${c.status==='active'?'פעיל':'לא פעיל'}</span></td>
         <td class="cell-actions">
@@ -902,8 +910,8 @@
           const st = p.stock===0?'out':(p.stock<=p.threshold?'low':'ok');
           const stMap = {ok:['success','תקין'], low:['warning','נמוך'], out:['danger','אזל']};
           return `<tr>
-            <td data-label="מוצר"><div class="cell-main">${productImgHtml(p,36)}<span class="cell-title">${p.name}</span></div></td>
-            <td data-label="מק&quot;ט" class="text-faint">${p.sku}</td>
+            <td data-label="מוצר"><div class="cell-main">${productImgHtml(p,36)}<span class="cell-title">${escAttr(p.name)}</span></div></td>
+            <td data-label="מק&quot;ט" class="text-faint">${escAttr(p.sku)}</td>
             <td data-label="מלאי נוכחי" class="num">${p.stock}</td>
             <td data-label="סף מלאי נמוך" class="num text-faint">${p.threshold}</td>
             <td data-label="סטטוס"><span class="status-badge ${stMap[st][0]}">${stMap[st][1]}</span></td>
@@ -941,15 +949,15 @@
               <td class="text-faint">${new Date(h.at).toLocaleString('he-IL')}</td>
               <td class="num" style="color:${h.delta>=0?'var(--success)':'var(--danger)'};">${deltaSign}${h.delta}</td>
               <td class="num">${h.newStock}</td>
-              <td class="text-faint">${h.reason||''}</td>
-              <td class="text-faint">${actorName}</td>
+              <td class="text-faint">${escAttr(h.reason||'')}</td>
+              <td class="text-faint">${escAttr(actorName)}</td>
             </tr>`;
           }).join('')}</tbody>
         </table></div>
         ${total > items.length ? `<p class="text-faint" style="padding:10px 0 0;font-size:11.5px;">מוצגות ${items.length} מתוך ${total} רשומות</p>` : ''}
       `;
     }catch(err){
-      $('#historyModalBody').innerHTML = `<p class="text-faint" style="padding:16px 0;">שגיאה בטעינת ההיסטוריה: ${err.message}</p>`;
+      $('#historyModalBody').innerHTML = `<p class="text-faint" style="padding:16px 0;">שגיאה בטעינת ההיסטוריה: ${escAttr(err.message)}</p>`;
     }
   }
   function initInventoryPage(){
@@ -1010,13 +1018,13 @@
         html += `<div style="grid-column:1/-1;font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;margin-top:4px;padding-top:14px;border-top:1px solid var(--line);">מבצעים שפגו</div>`;
         sawExpiredHeader = true;
       }
-      html += `<div class="promo-card ${pr.status}" data-edit-promo="${pr.id}" role="button" tabindex="0" style="cursor:pointer;">
+      html += `<div class="promo-card ${pr.status}" data-edit-promo="${escAttr(pr.id)}" role="button" tabindex="0" style="cursor:pointer;">
         <div class="promo-top">
-          <span class="promo-code">${pr.code}</span>
+          <span class="promo-code">${escAttr(pr.code)}</span>
           <span class="status-badge ${statusCls2[pr.status]}">${statusLbl[pr.status]}</span>
         </div>
         <div class="promo-discount">${pr.discount>0 ? pr.discount+'% הנחה' : 'משלוח חינם'}</div>
-        <div class="promo-name">${pr.name}</div>
+        <div class="promo-name">${escAttr(pr.name)}</div>
         <div class="promo-dates"><span>${fmtDate(pr.start)}</span><span>עד ${fmtDate(pr.end)}</span></div>
       </div>`;
     });
@@ -1327,7 +1335,7 @@
         <td>${escAttr(r.sku||'—')}</td>
         <td>${escAttr(r.name||'—')}</td>
         <td>${r.valid ? `<span class="status-badge ${r.action==='create'?'success':'info'}">${r.action==='create'?'חדש':'עדכון'}</span>` : '<span class="status-badge danger">שגיאה</span>'}</td>
-        <td class="text-faint" style="font-size:11.5px;">${(r.errors||[]).join('; ')}</td>
+        <td class="text-faint" style="font-size:11.5px;">${escAttr((r.errors||[]).join('; '))}</td>
       </tr>
     `).join('');
     $('#importStep1').style.display = 'none';

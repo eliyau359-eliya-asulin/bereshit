@@ -11,7 +11,8 @@
       "name": "flask-api",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "backend.app"],
-      "port": 5000
+      "port": 5000,
+      "autoPort": true
     }
   ]
 }

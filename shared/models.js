@@ -37,14 +37,14 @@
  * @property {('active'|'draft'|'out')} status  Admin-facing lifecycle status.
  * @property {number} sold              Cumulative units sold (for "best sellers").
  * @property {?string} image            URL/path to a hosted product photo, or null.
+ * @property {?string} thumbnail         Small resized variant of `image` from the upload pipeline, or null.
  *
- * Presentation-only note: `image` is a URL string, never binary data —
- * MongoDB stores a reference, not the photo itself. The customer site's
- * original 17-product catalog still resolves its real photography from a
- * local asset map (see PRODUCT_IMAGES in index.html) since those photos
- * predate this field and aren't hosted anywhere with a URL yet; any new
- * or edited product uses `image` directly, with a placeholder icon shown
- * wherever it's null (see thumbHtml/productImgHtml in admin/js/admin.js).
+ * `image`/`thumbnail` are URL strings, never binary data — MongoDB
+ * stores a reference (a Vercel Blob URL from the upload pipeline; see
+ * backend/services/images_service.py), never the photo itself. Both
+ * sides render a placeholder icon wherever they're null (see
+ * productImageSrc/IMAGE_PLACEHOLDER in index.html and
+ * thumbHtml/productImgHtml in admin/js/admin.js).
  */
 
 /**
